@@ -49,7 +49,7 @@ export default function App() {
     }
 
     // Apply sorting
-    result.sort((a, b) => {
+    return result.sort((a, b) => {
       switch (sortBy) {
         case 'name':
           return a.name.localeCompare(b.name);
@@ -63,18 +63,21 @@ export default function App() {
           return 0;
       }
     });
-
-    return result;
   }, [filter, sortBy, searchQuery, favorites, ratings]);
 
-  const stats = useMemo(() => ({
-    total: hotSauces.length,
-    rated: Object.keys(ratings).length,
-    favorites: favorites.length,
-    avgRating: Object.values(ratings).length
-      ? (Object.values(ratings).reduce((a, b) => a + b, 0) / Object.values(ratings).length).toFixed(1)
-      : 0,
-  }), [ratings, favorites]);
+  const stats = useMemo(() => {
+    const ratingValues = Object.values(ratings);
+    const avgRating = ratingValues.length
+      ? ratingValues.reduce((sum, rating) => sum + rating, 0) / ratingValues.length
+      : 0;
+
+    return {
+      total: hotSauces.length,
+      rated: Object.keys(ratings).length,
+      favorites: favorites.length,
+      avgRating,
+    };
+  }, [ratings, favorites]);
 
   return (
     <div className="app">
@@ -99,7 +102,7 @@ export default function App() {
           <span className="stat-label">Favorites</span>
         </div>
         <div className="stat">
-          <span className="stat-value">{stats.avgRating}</span>
+          <span className="stat-value">{stats.avgRating.toFixed(1)}</span>
           <span className="stat-label">Avg Rating</span>
         </div>
       </div>
