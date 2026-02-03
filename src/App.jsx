@@ -69,7 +69,7 @@ export default function App() {
     const ratingValues = Object.values(ratings);
     const avgRating = ratingValues.length
       ? (ratingValues.reduce((sum, rating) => sum + rating, 0) / ratingValues.length).toFixed(1)
-      : 0;
+      : '0.0';
 
     return {
       total: hotSauces.length,
