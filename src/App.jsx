@@ -26,7 +26,7 @@ export default function App() {
   };
 
   const filteredAndSortedSauces = useMemo(() => {
-    let result = hotSauces;
+    let result = [...hotSauces];
 
     // Apply search filter
     if (searchQuery) {
