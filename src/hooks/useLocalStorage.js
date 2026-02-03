@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export function useLocalStorage(key, initialValue) {
   // Get stored value or use initial value
@@ -12,8 +12,15 @@ export function useLocalStorage(key, initialValue) {
     }
   });
 
-  // Update localStorage when state changes
+  const isFirstRender = useRef(true);
+
+  // Update localStorage when state changes (skip initial render)
   useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
     try {
       window.localStorage.setItem(key, JSON.stringify(storedValue));
     } catch (error) {
