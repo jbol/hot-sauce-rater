@@ -68,8 +68,8 @@ export default function App() {
   const stats = useMemo(() => {
     const ratingValues = Object.values(ratings);
     const avgRating = ratingValues.length
-      ? (ratingValues.reduce((sum, rating) => sum + rating, 0) / ratingValues.length).toFixed(1)
-      : '0.0';
+      ? ratingValues.reduce((sum, rating) => sum + rating, 0) / ratingValues.length
+      : 0;
 
     return {
       total: hotSauces.length,
@@ -102,7 +102,7 @@ export default function App() {
           <span className="stat-label">Favorites</span>
         </div>
         <div className="stat">
-          <span className="stat-value">{stats.avgRating}</span>
+          <span className="stat-value">{stats.avgRating.toFixed(1)}</span>
           <span className="stat-label">Avg Rating</span>
         </div>
       </div>
