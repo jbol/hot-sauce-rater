@@ -73,7 +73,7 @@ export default function App() {
 
     return {
       total: hotSauces.length,
-      rated: ratingValues.length,
+      rated: Object.keys(ratings).length,
       favorites: favorites.length,
       avgRating,
     };
