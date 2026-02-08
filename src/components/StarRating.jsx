@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export default function StarRating({ rating, onRate, readonly = false }) {
+export default function StarRating({ rating, onRate }) {
   const [hoverRating, setHoverRating] = useState(0);
 
   return (
@@ -10,10 +10,9 @@ export default function StarRating({ rating, onRate, readonly = false }) {
           key={star}
           type="button"
           className={`star ${star <= (hoverRating || rating) ? 'filled' : ''}`}
-          onClick={() => !readonly && onRate(star)}
-          onMouseEnter={() => !readonly && setHoverRating(star)}
-          onMouseLeave={() => !readonly && setHoverRating(0)}
-          disabled={readonly}
+          onClick={() => onRate(star)}
+          onMouseEnter={() => setHoverRating(star)}
+          onMouseLeave={() => setHoverRating(0)}
           aria-label={`Rate ${star} stars`}
         >
           ★
