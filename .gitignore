@@ -25,3 +25,6 @@ npm-debug.log*
 
 # Testing
 coverage/
+
+# Database (auto-created at runtime, do not commit)
+data/

@@ -1,172 +1,88 @@
-import { useState, useMemo } from 'react';
-import { hotSauces } from './data/hotSauces';
-import { useLocalStorage } from './hooks/useLocalStorage';
-import HotSauceCard from './components/HotSauceCard';
+import { useState } from 'react';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { SaucesProvider } from './contexts/SaucesContext';
+import AuthPage from './components/AuthPage';
+import PassportHome from './components/PassportHome';
+import ExploreView from './components/ExploreView';
 
-export default function App() {
-  const [ratings, setRatings] = useLocalStorage('hotSauceRatings', {});
-  const [favorites, setFavorites] = useLocalStorage('hotSauceFavorites', []);
-  const [filter, setFilter] = useState('all');
-  const [sortBy, setSortBy] = useState('name');
-  const [searchQuery, setSearchQuery] = useState('');
+function Nav({ view, setView }) {
+  const { user, logout } = useAuth();
+  const [busy, setBusy] = useState(false);
 
-  const handleRate = (sauceId, rating) => {
-    setRatings((prev) => ({
-      ...prev,
-      [sauceId]: rating,
-    }));
+  const handleLogout = async () => {
+    setBusy(true);
+    await logout();
+    setBusy(false);
   };
-
-  const handleToggleFavorite = (sauceId) => {
-    setFavorites((prev) =>
-      prev.includes(sauceId)
-        ? prev.filter((id) => id !== sauceId)
-        : [...prev, sauceId]
-    );
-  };
-
-  const filteredAndSortedSauces = useMemo(() => {
-    let result = [...hotSauces];
-
-    // Apply search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(
-        (sauce) =>
-          sauce.name.toLowerCase().includes(query) ||
-          sauce.brand.toLowerCase().includes(query) ||
-          sauce.peppers.some((p) => p.toLowerCase().includes(query))
-      );
-    }
-
-    // Apply category filter
-    if (filter === 'favorites') {
-      result = result.filter((sauce) => favorites.includes(sauce.id));
-    } else if (filter === 'rated') {
-      result = result.filter((sauce) => ratings[sauce.id]);
-    } else if (filter === 'unrated') {
-      result = result.filter((sauce) => !ratings[sauce.id]);
-    }
-
-    // Apply sorting
-    result.sort((a, b) => {
-      switch (sortBy) {
-        case 'name':
-          return a.name.localeCompare(b.name);
-        case 'heat-asc':
-          return a.heatLevel - b.heatLevel;
-        case 'heat-desc':
-          return b.heatLevel - a.heatLevel;
-        case 'rating':
-          return (ratings[b.id] || 0) - (ratings[a.id] || 0);
-        default:
-          return 0;
-      }
-    });
-
-    return result;
-  }, [filter, sortBy, searchQuery, favorites, ratings]);
-
-  const stats = useMemo(() => ({
-    total: hotSauces.length,
-    rated: Object.keys(ratings).length,
-    favorites: favorites.length,
-    avgRating: Object.values(ratings).length
-      ? (Object.values(ratings).reduce((a, b) => a + b, 0) / Object.values(ratings).length).toFixed(1)
-      : 0,
-  }), [ratings, favorites]);
 
   return (
-    <div className="app">
-      <header className="header">
-        <div className="header-content">
-          <h1>🌶️ Hot Sauce Rater</h1>
-          <p className="tagline">Rate, review, and track your favorite hot sauces</p>
-        </div>
-      </header>
-
-      <div className="stats-bar">
-        <div className="stat">
-          <span className="stat-value">{stats.total}</span>
-          <span className="stat-label">Sauces</span>
-        </div>
-        <div className="stat">
-          <span className="stat-value">{stats.rated}</span>
-          <span className="stat-label">Rated</span>
-        </div>
-        <div className="stat">
-          <span className="stat-value">{stats.favorites}</span>
-          <span className="stat-label">Favorites</span>
-        </div>
-        <div className="stat">
-          <span className="stat-value">{stats.avgRating}</span>
-          <span className="stat-label">Avg Rating</span>
-        </div>
+    <nav className="nav">
+      <div className="nav-brand">
+        <span className="nav-flame">🔥</span>
+        <span className="nav-brand-text">Hot Sauce Passport</span>
       </div>
 
-      <main className="main">
-        <div className="controls">
-          <input
-            type="search"
-            placeholder="Search sauces, brands, peppers..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="search-input"
-          />
+      <div className="nav-tabs">
+        <button
+          className={`nav-tab ${view === 'passport' ? 'nav-tab-active' : ''}`}
+          onClick={() => setView('passport')}
+        >
+          My Passport
+        </button>
+        <button
+          className={`nav-tab ${view === 'explore' ? 'nav-tab-active' : ''}`}
+          onClick={() => setView('explore')}
+        >
+          Explore
+        </button>
+      </div>
 
-          <div className="filter-sort">
-            <select
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              className="select"
-            >
-              <option value="all">All Sauces</option>
-              <option value="favorites">Favorites</option>
-              <option value="rated">Rated</option>
-              <option value="unrated">Unrated</option>
-            </select>
+      <div className="nav-user">
+        <span className="nav-name">{user?.name}</span>
+        <button className="nav-logout" onClick={handleLogout} disabled={busy}>
+          {busy ? '…' : 'Sign Out'}
+        </button>
+      </div>
+    </nav>
+  );
+}
 
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="select"
-            >
-              <option value="name">Sort by Name</option>
-              <option value="heat-asc">Heat: Low to High</option>
-              <option value="heat-desc">Heat: High to Low</option>
-              <option value="rating">Your Rating</option>
-            </select>
-          </div>
-        </div>
+function AppContent() {
+  const { user, loading } = useAuth();
+  const [view, setView] = useState('passport');
 
-        {filteredAndSortedSauces.length === 0 ? (
-          <div className="empty-state">
-            <p>No sauces found matching your criteria.</p>
-            {filter !== 'all' && (
-              <button onClick={() => setFilter('all')} className="btn">
-                Show All Sauces
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="sauce-grid">
-            {filteredAndSortedSauces.map((sauce) => (
-              <HotSauceCard
-                key={sauce.id}
-                sauce={sauce}
-                userRating={ratings[sauce.id]}
-                isFavorite={favorites.includes(sauce.id)}
-                onRate={handleRate}
-                onToggleFavorite={handleToggleFavorite}
-              />
-            ))}
-          </div>
-        )}
-      </main>
+  if (loading) {
+    return (
+      <div className="splash">
+        <div className="splash-flame">🔥</div>
+        <div className="splash-text">Loading…</div>
+      </div>
+    );
+  }
 
-      <footer className="footer">
-        <p>Built with 🔥 for hot sauce enthusiasts</p>
-      </footer>
-    </div>
+  if (!user) {
+    return <AuthPage />;
+  }
+
+  return (
+    <SaucesProvider>
+      <div className="app-shell">
+        <Nav view={view} setView={setView} />
+        <main className="app-main">
+          {view === 'passport' ? <PassportHome /> : <ExploreView />}
+        </main>
+        <footer className="app-footer">
+          🔥 Hot Sauce Passport · Republic of Spice
+        </footer>
+      </div>
+    </SaucesProvider>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }

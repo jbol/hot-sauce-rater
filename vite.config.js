@@ -3,5 +3,13 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  base: '/hot-sauce-rater/',  // Change this to your repo name
+  server: {
+    proxy: {
+      // Proxy /api requests to the Express backend during development
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
+    },
+  },
 })

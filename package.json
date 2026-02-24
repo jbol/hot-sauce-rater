@@ -1,13 +1,15 @@
 {
   "name": "hot-sauce-rater",
   "private": true,
-  "version": "1.0.0",
+  "version": "2.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev:server": "node --watch --no-warnings server/index.js",
+    "dev:client": "vite",
+    "dev": "node --no-warnings server/index.js & vite",
     "build": "vite build",
     "preview": "vite preview",
-    "deploy": "npm run build && gh-pages -d dist"
+    "start": "NODE_ENV=production node --no-warnings server/index.js"
   },
   "dependencies": {
     "react": "^18.2.0",
@@ -17,5 +19,8 @@
     "@vitejs/plugin-react": "^4.2.1",
     "gh-pages": "^6.1.1",
     "vite": "^5.1.0"
+  },
+  "engines": {
+    "node": ">=22.5.0"
   }
 }
