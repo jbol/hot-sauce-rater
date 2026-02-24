@@ -28,3 +28,13 @@ coverage/
 
 # Database (auto-created at runtime, do not commit)
 data/
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# SQLite database files
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
