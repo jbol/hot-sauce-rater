@@ -6,7 +6,7 @@
  *   - node:sqlite    — Database (built-in since Node 22.5)
  *   - node:crypto    — scrypt password hashing + HMAC-SHA256 tokens
  *
- * Zero external npm dependencies.
+ * Zero external runtime dependencies.
  */
 
 import { createServer } from 'node:http';
@@ -63,7 +63,7 @@ function serveStatic(pathname, res) {
     readFile(indexPath, (err, data) => {
       if (err) {
         res.writeHead(404, { 'Content-Type': 'text/plain' });
-        res.end('Not found. If this is a fresh deploy, run: npm run build');
+        res.end('Not found. If this is a fresh deploy, run: pnpm build');
         return;
       }
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });

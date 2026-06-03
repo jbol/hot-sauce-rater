@@ -16,34 +16,32 @@ const HEAT_LABELS = {
 };
 
 const COUNTRY_CODES = {
-  USA: 'US',
-  Mexico: 'MX',
-  Belize: 'BZ',
-  Thailand: 'TH',
+  USA:     'US',
+  Mexico:  'MX',
+  Belize:  'BZ',
+  Thailand:'TH',
   Jamaica: 'JM',
-  UK: 'UK',
+  UK:      'UK',
 };
 
 function getCountryCode(origin) {
   return COUNTRY_CODES[origin] || origin.slice(0, 2).toUpperCase();
 }
 
-// Deterministic pseudo-random rotation based on sauce ID — keeps stamps
-// consistently skewed without looking identical.
+// Deterministic pseudo-random rotation — keeps stamps consistently skewed
 function getRotation(id) {
   return ((id * 7 + 3) % 21) - 10;
 }
 
 function formatDate(iso) {
   if (!iso) return '';
-  return new Date(iso).toLocaleDateString('en-US', {
-    month: 'short',
-    year: 'numeric',
-  }).toUpperCase();
+  return new Date(iso)
+    .toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+    .toUpperCase();
 }
 
 export default function PassportStamp({ sauce, rating, ratedAt, isFavorite, unrated }) {
-  const color = unrated ? '#b0a090' : HEAT_COLORS[sauce.heatLevel];
+  const color  = unrated ? '#b0a090' : HEAT_COLORS[sauce.heatLevel];
   const rotation = getRotation(sauce.id);
 
   const heatDots = unrated
@@ -61,9 +59,12 @@ export default function PassportStamp({ sauce, rating, ratedAt, isFavorite, unra
       title={
         unrated
           ? `${sauce.name} — not yet tasted`
-          : `${sauce.name} · ${sauce.origin} · ${rating}/5 stars`
+          : `${sauce.name} · ${sauce.origin} · ${rating ?? 0}/5 stars`
       }
     >
+      {/* Ink bleed layer — gives a worn, slightly-bleeding ink look */}
+      {!unrated && <div className="stamp-ink-bleed" />}
+
       {/* Outer ring */}
       <div className="stamp-outer">
         {/* Inner ring */}
@@ -84,7 +85,7 @@ export default function PassportStamp({ sauce, rating, ratedAt, isFavorite, unra
         </div>
       </div>
 
-      {/* Favorite gold star badge */}
+      {/* Favourite gold badge */}
       {isFavorite && !unrated && (
         <div className="stamp-fav-badge" title="Favourite">★</div>
       )}

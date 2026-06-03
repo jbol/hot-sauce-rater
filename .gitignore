@@ -1,5 +1,6 @@
 # Dependencies
 node_modules/
+.pnpm-store/
 
 # Build output
 dist/
@@ -17,6 +18,12 @@ Thumbs.db
 # Logs
 *.log
 npm-debug.log*
+pnpm-debug.log*
+
+# Package manager — this is a pnpm project.
+# Commit pnpm-lock.yaml; never commit other managers' lockfiles.
+package-lock.json
+yarn.lock
 
 # Environment
 .env
@@ -26,14 +33,8 @@ npm-debug.log*
 # Testing
 coverage/
 
-# Database (auto-created at runtime, do not commit)
+# Database — auto-created at runtime, do not commit (SQLite)
 data/
-*.db
-*.db-journal
-*.db-shm
-*.db-wal
-
-# SQLite database files
 *.db
 *.db-journal
 *.db-shm

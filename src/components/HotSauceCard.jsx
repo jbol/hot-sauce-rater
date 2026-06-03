@@ -1,10 +1,17 @@
 import StarRating from './StarRating';
 import HeatLevel from './HeatLevel';
+import SauceBottle from './SauceBottle';
 
 export default function HotSauceCard({ sauce, userRating, isFavorite, onRate, onToggleFavorite }) {
   return (
     <div className={`sauce-card ${isFavorite ? 'favorite' : ''}`}>
       <div className="sauce-header">
+        <div className="sauce-thumb">
+          <SauceBottle
+            heatLevel={sauce.heatLevel}
+            title={`${sauce.name} — heat ${sauce.heatLevel}/${sauce.maxHeat}`}
+          />
+        </div>
         <div className="sauce-title">
           <h3>{sauce.name}</h3>
           <span className="brand">{sauce.brand}</span>

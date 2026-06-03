@@ -24,8 +24,9 @@
   --paper-border:#c8aa7a;
 
   /* Passport cover */
-  --cover-bg:    #0f2440;
-  --cover-bg2:   #1a3a5c;
+  --cover-bg:    #0a1f3d;
+  --cover-bg2:   #142d52;
+  --cover-spine: #071529;
 
   --radius: 12px;
   --shadow: 0 4px 20px rgba(0,0,0,0.5);
@@ -116,10 +117,7 @@ body {
 .form-group input.input-error { border-color: var(--primary); }
 .form-group input::placeholder { color: var(--text-muted); }
 
-.field-error {
-  font-size: 0.78rem;
-  color: #fca5a5;
-}
+.field-error { font-size: 0.78rem; color: #fca5a5; }
 
 .server-error {
   padding: 0.75rem 1rem;
@@ -147,11 +145,7 @@ body {
 .auth-submit-btn:active:not(:disabled) { transform: scale(0.98); }
 .auth-submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-.auth-switch {
-  margin-top: 1.5rem;
-  font-size: 0.9rem;
-  color: var(--text-muted);
-}
+.auth-switch { margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-muted); }
 .link-btn {
   background: none;
   border: none;
@@ -238,7 +232,7 @@ body {
    PASSPORT PAGE WRAPPER
    ───────────────────────────────────────────────────────────── */
 .passport-page-wrap {
-  max-width: 960px;
+  max-width: 980px;
   margin: 0 auto;
   padding: 2rem 1rem 3rem;
   display: flex;
@@ -247,18 +241,46 @@ body {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   PASSPORT COVER
+   PASSPORT COVER  (booklet look with spine)
    ───────────────────────────────────────────────────────────── */
-.passport-cover {
-  background: linear-gradient(160deg, var(--cover-bg2) 0%, var(--cover-bg) 60%);
+.passport-cover-container {
+  display: flex;
+  align-items: stretch;
   border-radius: 16px;
-  padding: 0.25rem;
-  box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+  overflow: hidden;
+  box-shadow:
+    0 12px 48px rgba(0,0,0,0.7),
+    0 2px 8px rgba(0,0,0,0.4),
+    inset 0 1px 0 rgba(255,255,255,0.05);
+  position: relative;
+}
+
+/* Physical spine strip on the left */
+.passport-cover-spine {
+  width: 18px;
+  flex-shrink: 0;
+  background: linear-gradient(180deg,
+    #0a1627 0%,
+    var(--cover-spine) 20%,
+    #0d1f3a 50%,
+    var(--cover-spine) 80%,
+    #0a1627 100%
+  );
+  /* Subtle vertical highlight to mimic cloth binding */
+  box-shadow: inset -2px 0 4px rgba(0,0,0,0.5), inset 2px 0 4px rgba(255,255,255,0.04);
+}
+
+/* Main cover face */
+.passport-cover {
+  flex: 1;
+  background:
+    linear-gradient(160deg, var(--cover-bg2) 0%, var(--cover-bg) 55%, #071325 100%);
+  padding: 0.3rem 0.3rem 0.3rem 0;
   position: relative;
   overflow: hidden;
 }
 
-/* Gold decorative lines across cover */
+/* Subtle vertical stripe texture on cover */
 .passport-cover::before {
   content: '';
   position: absolute;
@@ -266,61 +288,131 @@ body {
   background:
     repeating-linear-gradient(
       90deg,
-      transparent 0px, transparent 38px,
-      rgba(212,175,55,0.07) 38px, rgba(212,175,55,0.07) 40px
+      transparent 0px, transparent 34px,
+      rgba(212,175,55,0.055) 34px, rgba(212,175,55,0.055) 36px
     );
+  pointer-events: none;
+}
+/* Radial highlight near emblem */
+.passport-cover::after {
+  content: '';
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(212,175,55,0.06) 0%, transparent 70%);
   pointer-events: none;
 }
 
 .passport-cover-inner {
-  border: 2px solid rgba(212,175,55,0.35);
-  border-radius: 12px;
-  padding: 2.5rem 2rem;
+  border: 1.5px solid rgba(212,175,55,0.3);
+  border-radius: 10px;
+  padding: 2.75rem 2rem;
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.35rem;
   position: relative;
+  height: 100%;
 }
+
+/* Corner ornaments on cover */
+.cover-corner {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-color: rgba(212,175,55,0.4);
+  border-style: solid;
+}
+.cover-corner-tl { top: 8px;  left: 8px;  border-width: 1.5px 0 0 1.5px; }
+.cover-corner-tr { top: 8px;  right: 8px; border-width: 1.5px 1.5px 0 0; }
+.cover-corner-bl { bottom: 8px; left: 8px;  border-width: 0 0 1.5px 1.5px; }
+.cover-corner-br { bottom: 8px; right: 8px; border-width: 0 1.5px 1.5px 0; }
 
 .cover-top-text {
-  font-size: 0.7rem;
-  letter-spacing: 0.4em;
-  color: rgba(212,175,55,0.7);
+  font-family: Georgia, serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.45em;
+  color: rgba(212,175,55,0.75);
   text-transform: uppercase;
-  margin-bottom: 0.5rem;
+}
+.cover-top-subtext {
+  font-size: 0.5rem;
+  letter-spacing: 0.28em;
+  color: rgba(212,175,55,0.38);
+  text-transform: uppercase;
+  margin-top: -0.15rem;
+  margin-bottom: 0.6rem;
 }
 
+/* Seal / emblem */
+.cover-seal {
+  position: relative;
+  width: 86px;
+  height: 86px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0.4rem 0 0.6rem;
+}
+.cover-seal-outer,
+.cover-seal-inner {
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px solid rgba(212,175,55,0.45);
+}
+.cover-seal-outer { inset: 0; }
+.cover-seal-inner { inset: 10px; border-color: rgba(212,175,55,0.25); }
 .cover-emblem {
-  font-size: 3rem;
-  filter: drop-shadow(0 0 12px rgba(212,175,55,0.5));
-  margin: 0.25rem 0;
+  font-size: 2.6rem;
+  filter: drop-shadow(0 0 14px rgba(212,175,55,0.55));
+  position: relative;
+  z-index: 1;
 }
 
+.cover-title-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+}
 .cover-title {
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: 2rem;
+  font-size: 1.9rem;
   font-weight: 700;
   color: var(--gold);
-  letter-spacing: 0.25em;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.5), 0 0 20px rgba(212,175,55,0.3);
+  letter-spacing: 0.28em;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.6), 0 0 24px rgba(212,175,55,0.25);
+  line-height: 1.2;
 }
-.cover-title-sub { font-size: 1.5rem; letter-spacing: 0.4em; }
+.cover-title-sub {
+  font-size: 1.45rem;
+  letter-spacing: 0.42em;
+}
+.cover-title-footnote {
+  font-size: 0.5rem;
+  letter-spacing: 0.3em;
+  color: rgba(212,175,55,0.45);
+  text-transform: uppercase;
+  margin-top: 0.2rem;
+}
 
 .cover-divider {
-  width: 120px;
+  width: 130px;
   height: 1px;
-  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  background: linear-gradient(90deg, transparent, rgba(212,175,55,0.5), transparent);
   margin: 0.5rem 0;
-  opacity: 0.6;
 }
 
 .cover-holder {
   font-family: 'Courier New', monospace;
-  font-size: 1.1rem;
-  color: rgba(240,208,96,0.85);
-  letter-spacing: 0.15em;
+  font-size: 1rem;
+  color: rgba(240,208,96,0.8);
+  letter-spacing: 0.18em;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -332,23 +424,25 @@ body {
   gap: 0;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: var(--shadow);
+  box-shadow:
+    var(--shadow),
+    0 1px 0 rgba(255,255,255,0.04);
   position: relative;
 }
 
-/* Spine shadow down the center */
+/* Central spine shadow */
 .passport-book::after {
   content: '';
   position: absolute;
   top: 0; bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 8px;
+  width: 10px;
   background: linear-gradient(90deg,
-    rgba(0,0,0,0.25) 0%,
-    rgba(0,0,0,0.05) 40%,
-    rgba(0,0,0,0.05) 60%,
-    rgba(0,0,0,0.25) 100%
+    rgba(0,0,0,0.3) 0%,
+    rgba(0,0,0,0.08) 40%,
+    rgba(0,0,0,0.08) 60%,
+    rgba(0,0,0,0.3) 100%
   );
   pointer-events: none;
   z-index: 10;
@@ -360,82 +454,154 @@ body {
 .passport-leaf {
   background: var(--paper);
   position: relative;
-  padding: 1.75rem 1.5rem 2rem;
-  min-height: 480px;
+  padding: 1.75rem 1.5rem 2.5rem;
+  min-height: 520px;
+  overflow: hidden;
 }
 
-/* Security background pattern (subtle wavy lines) */
-.leaf-security-bg {
+/* Guilloche-style security pattern */
+.leaf-guilloche {
   position: absolute;
   inset: 0;
   pointer-events: none;
   background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='40'%3E%3Cpath d='M0 20 Q20 0 40 20 Q60 40 80 20' fill='none' stroke='rgba(160,120,60,0.07)' stroke-width='1.5'/%3E%3C/svg%3E");
-  background-size: 80px 40px;
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='50'%3E%3Cpath d='M0 25 Q12.5 5 25 25 Q37.5 45 50 25 Q62.5 5 75 25 Q87.5 45 100 25' fill='none' stroke='rgba(160,120,60,0.06)' stroke-width='1'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='50'%3E%3Cpath d='M0 15 Q12.5 35 25 15 Q37.5 -5 50 15 Q62.5 35 75 15 Q87.5 -5 100 15' fill='none' stroke='rgba(160,120,60,0.04)' stroke-width='1'/%3E%3C/svg%3E");
+  background-size: 100px 50px, 100px 50px;
+  background-position: 0 0, 50px 12px;
+  opacity: 1;
 }
+
+/* Corner decorative marks */
+.leaf-corner {
+  position: absolute;
+  font-size: 0.55rem;
+  color: rgba(160,120,60,0.35);
+  font-family: Georgia, serif;
+  line-height: 1;
+  pointer-events: none;
+}
+.leaf-corner-tl { top:  10px; left:  10px; }
+.leaf-corner-tr { top:  10px; right: 10px; }
+.leaf-corner-bl { bottom: 10px; left: 10px; }
+.leaf-corner-br { bottom: 10px; right: 10px; }
 
 .leaf-content { position: relative; z-index: 1; height: 100%; }
 
 .leaf-page-num {
   position: absolute;
-  bottom: 0.75rem;
-  right: 1rem;
+  bottom: 0.85rem;
+  right: 1.1rem;
   font-family: 'Courier New', monospace;
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   color: var(--paper-border);
   letter-spacing: 0.1em;
+  opacity: 0.7;
 }
 
 /* ─────────────────────────────────────────────────────────────
    BIO PAGE
    ───────────────────────────────────────────────────────────── */
 .bio-header {
-  border-bottom: 1px solid var(--paper-border);
-  padding-bottom: 0.75rem;
+  border-bottom: 1.5px solid var(--paper-border);
+  padding-bottom: 0.7rem;
   margin-bottom: 1rem;
 }
 .bio-header-primary {
   font-family: Georgia, serif;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 700;
   color: var(--paper-ink);
   letter-spacing: 0.1em;
 }
 .bio-header-secondary {
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   color: #8a7060;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.07em;
+  margin-top: 0.15rem;
 }
 
-.bio-photo-row { display: flex; justify-content: center; margin-bottom: 1rem; }
+/* Photo + stats side-by-side */
+.bio-photo-row {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
 .bio-photo {
-  width: 70px;
-  height: 70px;
+  width: 74px;
+  height: 88px;
+  flex-shrink: 0;
   border: 2px solid var(--paper-border);
-  background: var(--paper-dark);
+  background:
+    linear-gradient(135deg, var(--paper-dark) 0%, #e8d8b8 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
+  border-radius: 3px;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.12);
 }
 .bio-initials {
   font-family: Georgia, serif;
-  font-size: 1.6rem;
+  font-size: 1.7rem;
   font-weight: 700;
   color: #5a3e2b;
 }
 
-.bio-fields { display: flex; flex-direction: column; gap: 0.5rem; }
+/* Stats panel next to photo */
+.bio-stats-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding-top: 0.1rem;
+}
+.bio-stat-label {
+  font-family: 'Courier New', monospace;
+  font-size: 0.5rem;
+  letter-spacing: 0.14em;
+  color: #8a7060;
+  text-transform: uppercase;
+}
+.bio-heat-bar {
+  display: flex;
+  gap: 3px;
+  margin-top: 0.15rem;
+}
+.bio-heat-seg {
+  flex: 1;
+  height: 8px;
+  border-radius: 2px;
+  background: rgba(180,140,80,0.2);
+  border: 1px solid rgba(180,140,80,0.3);
+  transition: background 0.3s;
+}
+.bio-heat-seg-active {
+  background: var(--seg-color, #d97706);
+  border-color: var(--seg-color, #d97706);
+  box-shadow: 0 0 4px var(--seg-color, #d97706);
+}
+.bio-tasted-count {
+  font-family: Georgia, serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #8b2000;
+  line-height: 1.1;
+  margin-top: 0.15rem;
+}
+.bio-of { font-size: 0.75rem; color: #8a7060; font-weight: 400; }
 
+/* Data fields */
+.bio-fields { display: flex; flex-direction: column; gap: 0.45rem; }
 .bio-row {
   display: flex;
   flex-direction: column;
   gap: 0.05rem;
-  border-bottom: 1px solid rgba(180,140,80,0.2);
-  padding-bottom: 0.4rem;
+  border-bottom: 1px solid rgba(180,140,80,0.18);
+  padding-bottom: 0.35rem;
 }
 .bio-label {
-  font-size: 0.55rem;
+  font-size: 0.52rem;
   letter-spacing: 0.12em;
   color: #8a7060;
   text-transform: uppercase;
@@ -443,47 +609,45 @@ body {
 }
 .bio-val {
   font-family: Georgia, serif;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--paper-ink);
   word-break: break-all;
 }
 
-.bio-row-highlight { margin-top: 0.25rem; }
-.bio-val-big { font-size: 1.1rem; font-weight: 700; color: #8b2000; }
-.bio-of { font-size: 0.8rem; color: #8a7060; font-weight: 400; }
-
-/* MRZ (Machine Readable Zone) */
+/* MRZ (Machine-Readable Zone) */
 .mrz {
   margin-top: 1rem;
-  padding: 0.6rem;
+  padding: 0.55rem 0.65rem;
   background: var(--paper-dark);
   border: 1px solid var(--paper-border);
-  border-radius: 4px;
+  border-radius: 3px;
 }
 .mrz-line {
   font-family: 'Courier New', monospace;
-  font-size: 0.6rem;
+  font-size: 0.58rem;
   color: #5a3e2b;
   letter-spacing: 0.08em;
   white-space: nowrap;
   overflow: hidden;
-  line-height: 1.6;
+  line-height: 1.65;
 }
 
 /* ─────────────────────────────────────────────────────────────
    STAMPS PAGE
    ───────────────────────────────────────────────────────────── */
-.passport-stamps { border-left: 1px solid var(--paper-border); }
+.passport-stamps {
+  border-left: 1.5px solid rgba(180,140,80,0.3);
+}
 
 .stamps-page-title {
   font-family: Georgia, serif;
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   letter-spacing: 0.15em;
   color: var(--paper-border);
   text-transform: uppercase;
-  border-bottom: 1px solid var(--paper-border);
-  padding-bottom: 0.75rem;
-  margin-bottom: 1.25rem;
+  border-bottom: 1.5px solid var(--paper-border);
+  padding-bottom: 0.7rem;
+  margin-bottom: 1rem;
 }
 
 .stamps-loading {
@@ -499,10 +663,72 @@ body {
 }
 .stamps-loading-icon { font-size: 2rem; animation: pulse 1.5s ease-in-out infinite; }
 
+/* Empty state */
+.stamps-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2.5rem 1rem;
+  text-align: center;
+  font-family: Georgia, serif;
+  color: #8a7060;
+}
+.stamps-empty-icon { font-size: 2.5rem; margin-bottom: 0.25rem; }
+.stamps-empty-msg {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--paper-ink);
+  letter-spacing: 0.05em;
+}
+.stamps-empty-sub {
+  font-size: 0.7rem;
+  color: #8a7060;
+  letter-spacing: 0.04em;
+  font-style: italic;
+}
+
+/* Heat-level sections */
+.stamps-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+.stamps-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Section divider header */
+.stamps-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: 'Courier New', monospace;
+  font-size: 0.48rem;
+  letter-spacing: 0.28em;
+  color: var(--section-color, #b0a090);
+  text-transform: uppercase;
+}
+.stamps-section-pending {
+  --section-color: #b0a090;
+}
+.stamps-section-rule {
+  flex: 1;
+  height: 1px;
+  background: var(--section-color, #b0a090);
+  opacity: 0.4;
+}
+.stamps-section-label {
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
 .stamps-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1rem 0.5rem;
+  gap: 0.65rem 0.4rem;
   justify-items: center;
 }
 
@@ -516,27 +742,39 @@ body {
   cursor: default;
 }
 .stamp:hover {
-  transform: rotate(0deg) scale(1.1);
+  transform: rotate(0deg) scale(1.12);
   z-index: 20;
 }
 
-.stamp-outer {
-  width: 120px;
-  height: 120px;
+/* Ink bleed — soft glow behind stamp for an inked-onto-paper feel */
+.stamp-ink-bleed {
+  position: absolute;
+  inset: 8px;
   border-radius: 50%;
-  border: 3.5px solid var(--stamp-color);
+  background: radial-gradient(circle,
+    rgba(var(--stamp-r, 0), var(--stamp-g, 0), var(--stamp-b, 0), 0.06) 0%,
+    transparent 70%
+  );
+  filter: blur(4px);
+  pointer-events: none;
+}
+
+.stamp-outer {
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  border: 3px solid var(--stamp-color);
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Ink aging */
-  filter: saturate(0.85) opacity(0.82);
+  filter: saturate(0.82) opacity(0.80);
   transition: filter 0.25s;
 }
 .stamp:hover .stamp-outer { filter: saturate(1) opacity(1); }
 
 .stamp-inner {
-  width: 100px;
-  height: 100px;
+  width: 94px;
+  height: 94px;
   border-radius: 50%;
   border: 1.5px solid var(--stamp-color);
   display: flex;
@@ -548,8 +786,8 @@ body {
   text-align: center;
   color: var(--stamp-color);
   font-family: 'Courier New', monospace;
-  padding: 4px;
-  max-width: 90px;
+  padding: 3px;
+  max-width: 82px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -557,56 +795,56 @@ body {
 }
 
 .stamp-top-arc {
-  font-size: 0.52rem;
-  letter-spacing: 0.35em;
-  opacity: 0.75;
+  font-size: 0.5rem;
+  letter-spacing: 0.38em;
+  opacity: 0.72;
   text-transform: uppercase;
 }
 .stamp-sub {
-  font-size: 0.42rem;
-  letter-spacing: 0.2em;
-  opacity: 0.65;
+  font-size: 0.4rem;
+  letter-spacing: 0.22em;
+  opacity: 0.62;
   text-transform: uppercase;
 }
 .stamp-name {
-  font-size: 0.6rem;
+  font-size: 0.58rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
   line-height: 1.15;
-  text-shadow: 0 0 4px currentColor;
+  text-shadow: 0 0 5px currentColor;
   margin: 1px 0;
 }
 .stamp-dots {
-  font-size: 0.45rem;
-  letter-spacing: 0.18em;
+  font-size: 0.44rem;
+  letter-spacing: 0.16em;
 }
 .stamp-stars {
-  font-size: 0.52rem;
+  font-size: 0.5rem;
   letter-spacing: 0.05em;
 }
 .stamp-date {
-  font-size: 0.44rem;
+  font-size: 0.42rem;
   letter-spacing: 0.1em;
-  opacity: 0.75;
+  opacity: 0.72;
 }
 .stamp-pending {
-  font-size: 0.38rem;
+  font-size: 0.37rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  opacity: 0.65;
+  opacity: 0.6;
 }
 
-/* Unrated stamps look ghosted */
+/* Unrated stamps — ghosted / dashed */
 .stamp-unrated .stamp-outer {
   border-style: dashed;
-  filter: opacity(0.22) saturate(0);
+  filter: opacity(0.2) saturate(0);
 }
 .stamp-unrated .stamp-inner {
   border-style: dashed;
 }
 .stamp-unrated:hover .stamp-outer {
-  filter: opacity(0.4) saturate(0.2);
+  filter: opacity(0.38) saturate(0.15);
 }
 
 /* Gold favourite badge */
@@ -619,7 +857,7 @@ body {
   border-radius: 50%;
   background: #d4af37;
   color: #fff;
-  font-size: 0.6rem;
+  font-size: 0.58rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -744,10 +982,30 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  gap: 0.85rem;
   margin-bottom: 0.75rem;
 }
+.sauce-title { flex: 1 1 auto; min-width: 0; }
 .sauce-title h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.2rem; }
 .brand { font-size: 0.85rem; color: var(--text-muted); }
+
+/* Default flamenco-bottle icon — tinted by heat level */
+.sauce-thumb {
+  flex: 0 0 auto;
+  width: 52px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  transition: transform 0.25s ease;
+}
+.sauce-thumb .sauce-bottle {
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.35));
+}
+.sauce-card:hover .sauce-thumb { transform: rotate(-4deg) scale(1.06); }
+.sauce-bottle--muted { filter: grayscale(1) opacity(0.5); }
 
 .favorite-btn {
   background: none; border: none; font-size: 1.35rem;
@@ -839,14 +1097,10 @@ body {
 }
 
 @media (max-width: 720px) {
-  /* Stack passport to single column */
-  .passport-book {
-    grid-template-columns: 1fr;
-  }
-  .passport-stamps { border-left: none; border-top: 1px solid var(--paper-border); }
+  .passport-book { grid-template-columns: 1fr; }
+  .passport-stamps { border-left: none; border-top: 1.5px solid rgba(180,140,80,0.3); }
   .passport-book::after { display: none; }
   .stamps-grid { grid-template-columns: repeat(3, 1fr); }
-
   .nav-brand-text { display: none; }
   .nav-name { display: none; }
 }
@@ -856,4 +1110,5 @@ body {
   .filter-sort { flex-direction: column; }
   .sauce-grid { grid-template-columns: 1fr; }
   .cover-title { font-size: 1.4rem; }
+  .passport-cover-spine { width: 12px; }
 }
