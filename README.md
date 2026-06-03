@@ -2,7 +2,7 @@
 
 A full-stack hot sauce rating app. Users register, log in, and collect passport stamps as they rate each sauce.
 
-**Stack:** React + Vite frontend · Pure Node.js 22 backend (zero npm dependencies for the server) · Built-in SQLite (`node:sqlite`)
+**Stack:** React + Vite frontend · Pure Node.js 22 backend (zero runtime dependencies for the server) · Built-in SQLite (`node:sqlite`) · **pnpm** for package management
 
 ---
 
@@ -35,18 +35,18 @@ Hostinger will ask for:
 
 | Field | Value |
 |---|---|
-| **Install command** | `npm ci` |
-| **Build command** | `npm run build` |
-| **Start command** | `npm start` |
+| **Install command** | `corepack enable && pnpm install --frozen-lockfile` |
+| **Build command** | `pnpm build` |
+| **Start command** | `pnpm start` |
 
-`npm start` runs `NODE_ENV=production node server/index.js`, which serves both the API *and* the built React frontend from a single process on Hostinger's assigned port.
+`corepack enable` activates the pnpm version pinned in `package.json` (`packageManager`); it ships with Node 22, so no separate pnpm install is needed. `pnpm start` runs `NODE_ENV=production node server/index.js`, which serves both the API *and* the built React frontend from a single process on Hostinger's assigned port.
 
 ### 5. Deploy
 
 Sync your GitHub repo in hPanel and click **Deploy**. Hostinger will:
-1. Run `npm ci` to install React + Vite dev tools
-2. Run `npm run build` to compile the frontend into `dist/`
-3. Run `npm start` to start the Node.js server
+1. Run `pnpm install --frozen-lockfile` to install React + Vite dev tools
+2. Run `pnpm build` to compile the frontend into `dist/`
+3. Run `pnpm start` to start the Node.js server
 
 The server automatically detects the `dist/` folder and switches into production mode, serving the frontend as static files.
 
@@ -65,12 +65,14 @@ Hostinger's Node.js hosting stores files on a shared filesystem. SQLite works fi
 
 ## Local development
 
+This project uses **pnpm**. With Node 22+, enable it once via `corepack enable` (no global install needed).
+
 ```bash
 # Install dependencies
-npm install
+pnpm install
 
 # Run backend + frontend dev servers concurrently
-npm run dev
+pnpm dev
 ```
 
 - Backend API: `http://localhost:3001`
@@ -80,8 +82,8 @@ The Vite dev server proxies `/api` requests to the backend automatically.
 
 ```bash
 # Build and preview the production bundle locally
-npm run build
-npm start
+pnpm build
+pnpm start
 # Visit http://localhost:3001
 ```
 
