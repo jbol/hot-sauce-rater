@@ -3,7 +3,7 @@
   "private": true,
   "version": "2.0.0",
   "type": "module",
-  "packageManager": "pnpm@9.15.4",
+  "packageManager": "pnpm@11.6.0",
   "scripts": {
     "preinstall": "npx --yes only-allow pnpm",
     "dev:server": "node --watch --no-warnings server/index.js",
