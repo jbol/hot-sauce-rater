@@ -8,6 +8,11 @@ A full-stack hot sauce rating app. Users register, log in, and collect passport 
 
 ## Deploying to Hostinger
 
+> 📘 **Already set up and just want to ship an update?** See
+> **[DEPLOYING.md](DEPLOYING.md)** for the repeatable merge-to-`main` → redeploy
+> workflow, rollback steps, and the database-backup checklist. The section below
+> is for *first-time* setup.
+
 ### 1. Make sure your repo is pushed to GitHub
 
 Hostinger's Node.js hosting syncs directly from a GitHub repository.
