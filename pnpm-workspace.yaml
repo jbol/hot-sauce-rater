@@ -1,5 +1,6 @@
 # pnpm 10+ no longer runs dependency build scripts by default, and pnpm 11
-# no longer reads the "pnpm" field in package.json — settings live here now.
+# replaced `onlyBuiltDependencies` with `allowBuilds` (a package -> bool map).
+# Settings live here now; pnpm 11 no longer reads the "pnpm" field in package.json.
 # esbuild (via Vite) needs its postinstall to fetch its platform binary.
-onlyBuiltDependencies:
-  - esbuild
+allowBuilds:
+  esbuild: true
