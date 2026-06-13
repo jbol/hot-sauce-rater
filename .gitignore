@@ -3,7 +3,10 @@ node_modules/
 .pnpm-store/
 
 # Build output
-dist/
+# NOTE: dist/ is intentionally COMMITTED. Hostinger's build sandbox is mounted
+# noexec, so esbuild/vite cannot run there. We build dist/ locally (Node 22 +
+# pnpm 11) and commit it; Hostinger only serves it. See DEPLOYING.md.
+# dist/
 
 # IDE
 .idea/

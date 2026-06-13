@@ -5,20 +5,32 @@ GitHub live on Hostinger. For *first-time* setup (Node version, env vars, build
 commands), see the **"Deploying to Hostinger"** section in [README.md](README.md).
 
 > **The golden rule:** Hostinger deploys from a **branch on GitHub** (almost
-> always `main`). So "update the live site" really means two steps:
-> **1) get your code onto `main` at GitHub**, then **2) make Hostinger pull &
-> rebuild that branch.**
+> always `main`), and **it does NOT build the frontend** (its build sandbox is
+> mounted noexec, so esbuild/Vite fail with `EACCES`). So "update the live site"
+> means: **1) build `dist/` locally and commit it**, **2) get it onto `main` at
+> GitHub**, then **3) make Hostinger pull that branch.** Hostinger just serves
+> the prebuilt `dist/` + the zero-dependency Node API.
+
+> ⚠️ **The frontend is prebuilt.** `dist/` is committed to the repo on purpose.
+> If you change anything under `src/`, you **must** rebuild and commit `dist/`
+> (Step 1 below) or the live site won't reflect your change. Backend-only changes
+> under `server/` don't need a rebuild.
 
 ---
 
 ## TL;DR — the routine update
 
 ```bash
-# 1. Merge your work into main (via a PR), then locally:
-git checkout main
-git pull
+# 1. (If you touched src/) rebuild the frontend locally and commit dist/.
+nvm use 22 && corepack enable      # build needs Node 22 + pnpm 11
+pnpm install
+pnpm build                         # regenerates dist/
+git add dist && git commit -m "Rebuild frontend"
 
-# 2. Trigger the deploy on Hostinger (see "Step 2" below for your method)
+# 2. Get everything onto main (merge a PR, or commit + push directly), then:
+git checkout main && git pull && git push
+
+# 3. Trigger the deploy on Hostinger (see "Step 2" below for your method)
 #    - Auto-deploy:   nothing to do — the push already triggered it
 #    - Manual button: hPanel → Websites → Git → "Deploy" / "Pull"
 #    - SSH:           ssh in, then run the redeploy commands below
@@ -33,6 +45,24 @@ change is live.
 
 The live site only ever reflects what's on the **`main` branch at GitHub**.
 Feature branches and unmerged PRs are *not* deployed.
+
+### First: rebuild `dist/` if you changed the frontend
+
+Hostinger can't build (noexec sandbox), so the compiled frontend lives in the
+repo. If you edited anything under `src/`, rebuild and commit it **before**
+pushing:
+
+```bash
+nvm use 22         # build requires Node 22+ (pnpm 11 needs Node ≥22.13)
+corepack enable    # activates the pinned pnpm 11.6.0
+pnpm install       # first time / after dependency changes
+pnpm build         # regenerates dist/
+git add dist
+```
+
+> Build on **Node 22**, not 18 — pnpm 11 refuses to run on Node 18, and the repo
+> targets the Node 22 runtime Hostinger uses. `nvm install 22` if you don't have
+> it. Backend-only (`server/`) changes don't need this step.
 
 ### Via a Pull Request (recommended)
 
@@ -99,10 +129,9 @@ cd ~/domains/yourdomain.com/public_html   # adjust to your actual path
 git checkout main
 git pull origin main
 
-# 4. Reinstall, rebuild, restart
-corepack enable
-pnpm install --frozen-lockfile
-pnpm build
+# 4. No build here — dist/ is already committed. Optionally refresh runtime deps
+#    (there are none, so this installs nothing and is safe to skip):
+# pnpm install --prod --frozen-lockfile
 
 # 5. Restart the Node app
 #    Easiest: hPanel → Node.js → "Restart" button.
@@ -169,10 +198,12 @@ your most recent database backup if the bad deploy corrupted data.
    - **On** → **Method A** (push to `main` = auto-rebuild).
    - **Off**, but there's a **Deploy/Pull button** → **Method B**.
 3. Check **hPanel → Node.js** for your **Application root** path and the
-   **Install / Build / Start** commands — these should match:
-   - Install: `corepack enable && pnpm install --frozen-lockfile`
-   - Build: `pnpm build`
-   - Start: `pnpm start`
+   **Install / Build / Start** commands — these should be:
+   - Install: `true` (or `pnpm install --prod --frozen-lockfile` if a non-empty
+     command is required — **never** a plain `pnpm install`; it pulls esbuild and
+     fails on the noexec sandbox)
+   - Build: `true` (no-op — `dist/` is prebuilt and committed)
+   - Start: `node --no-warnings server/index.js`
    - Node version: **22.x** (required for built-in `node:sqlite`).
 
 Once you've identified it, jot it at the top of this file so future-you doesn't
@@ -186,13 +217,14 @@ have to rediscover it:
 
 | Task | Command / location |
 |---|---|
-| Get code live | Merge to `main` → trigger deploy (Step 2) |
+| Rebuild frontend (local) | `nvm use 22 && corepack enable && pnpm install && pnpm build` → commit `dist/` |
+| Get code live | Build/commit `dist/` (if `src/` changed) → push `main` → trigger deploy |
 | View build logs | hPanel → Websites → Git → deployment history |
 | View runtime logs | hPanel → Node.js → Logs |
 | Restart server | hPanel → Node.js → Restart (or `pm2 restart`) |
 | Back up DB | hPanel → File Manager → `data/` → download `.db` |
 | Roll back | `git revert <sha>` → push → redeploy |
-| Required Node | **22.x** |
-| Install cmd | `corepack enable && pnpm install --frozen-lockfile` |
-| Build cmd | `pnpm build` |
-| Start cmd | `pnpm start` |
+| Required Node (build + runtime) | **22.x** |
+| Hostinger install cmd | `true` (or `pnpm install --prod --frozen-lockfile`) |
+| Hostinger build cmd | `true` (no-op — `dist/` is committed) |
+| Hostinger start cmd | `node --no-warnings server/index.js` |

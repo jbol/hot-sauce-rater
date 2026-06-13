@@ -40,20 +40,36 @@ Hostinger will ask for:
 
 | Field | Value |
 |---|---|
-| **Install command** | `corepack enable && pnpm install --frozen-lockfile` |
-| **Build command** | `pnpm build` |
-| **Start command** | `pnpm start` |
+| **Install command** | `true` *(no-op — see below)* |
+| **Build command** | `true` *(no-op — `dist/` is prebuilt & committed)* |
+| **Start command** | `node --no-warnings server/index.js` |
 
-`corepack enable` activates the pnpm version pinned in `package.json` (`packageManager`); it ships with Node 22, so no separate pnpm install is needed. `pnpm start` runs `NODE_ENV=production node server/index.js`, which serves both the API *and* the built React frontend from a single process on Hostinger's assigned port.
+> 🛑 **Do not build on Hostinger.** Hostinger's build sandbox is mounted
+> **noexec**, so `esbuild` (used by Vite) cannot execute its native binary and
+> the build fails with `EACCES`. Instead, the frontend is **built locally and
+> committed** as `dist/` (see [DEPLOYING.md](DEPLOYING.md)). The Node server has
+> **zero runtime dependencies**, so Hostinger needs *no* install or build step —
+> it just runs the server, which serves the prebuilt `dist/` as static files
+> plus the API from one process on Hostinger's assigned port.
+>
+> If Hostinger forces a non-empty install command, use
+> `pnpm install --prod --frozen-lockfile` — with no runtime dependencies it
+> installs nothing and never touches esbuild. **Never** use a plain
+> `pnpm install` here: it would pull in esbuild and fail on the noexec sandbox.
 
 ### 5. Deploy
 
-Sync your GitHub repo in hPanel and click **Deploy**. Hostinger will:
-1. Run `pnpm install --frozen-lockfile` to install React + Vite dev tools
-2. Run `pnpm build` to compile the frontend into `dist/`
-3. Run `pnpm start` to start the Node.js server
+1. **Locally**, rebuild and commit the frontend whenever it changes:
+   ```bash
+   nvm use 22 && corepack enable   # Node 22 + pnpm 11 are required to build
+   pnpm install
+   pnpm build                      # regenerates dist/
+   git add dist && git commit -m "Rebuild frontend" && git push
+   ```
+2. **In hPanel**, sync the repo and click **Deploy**. Hostinger pulls the
+   committed `dist/` and starts the server — no install/build runs.
 
-The server automatically detects the `dist/` folder and switches into production mode, serving the frontend as static files.
+The server automatically detects the `dist/` folder and serves the frontend as static files.
 
 ---
 
