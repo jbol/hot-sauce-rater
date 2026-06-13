@@ -1,0 +1,5 @@
+# pnpm 10+ no longer runs dependency build scripts by default, and pnpm 11
+# no longer reads the "pnpm" field in package.json — settings live here now.
+# esbuild (via Vite) needs its postinstall to fetch its platform binary.
+onlyBuiltDependencies:
+  - esbuild
