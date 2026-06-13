@@ -1,6 +1,10 @@
-# pnpm 10+ no longer runs dependency build scripts by default, and pnpm 11
-# replaced `onlyBuiltDependencies` with `allowBuilds` (a package -> bool map).
-# Settings live here now; pnpm 11 no longer reads the "pnpm" field in package.json.
-# esbuild (via Vite) needs its postinstall to fetch its platform binary.
+# pnpm 11 settings live here (pnpm 11 no longer reads the "pnpm" field in
+# package.json), and it replaced `onlyBuiltDependencies` with `allowBuilds`.
+#
+# esbuild is set to FALSE on purpose: Hostinger's build sandbox is mounted
+# noexec, so running esbuild's postinstall (which spawns its native binary)
+# fails with EACCES and breaks `pnpm install`. We don't need that postinstall —
+# Vite resolves the esbuild binary from the @esbuild/<platform> package directly,
+# so local `pnpm build` still works. See scripts/build.mjs and DEPLOYING.md.
 allowBuilds:
-  esbuild: true
+  esbuild: false

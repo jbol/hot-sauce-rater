@@ -198,12 +198,12 @@ your most recent database backup if the bad deploy corrupted data.
    - **On** → **Method A** (push to `main` = auto-rebuild).
    - **Off**, but there's a **Deploy/Pull button** → **Method B**.
 3. Check **hPanel → Node.js** for your **Application root** path and the
-   **Install / Build / Start** commands — these should be:
-   - Install: `true` (or `pnpm install --prod --frozen-lockfile` if a non-empty
-     command is required — **never** a plain `pnpm install`; it pulls esbuild and
-     fails on the noexec sandbox)
-   - Build: `true` (no-op — `dist/` is prebuilt and committed)
-   - Start: `node --no-warnings server/index.js`
+   **Install / Build / Start** commands. The standard Vite/pnpm defaults work
+   as-is (the repo handles the noexec sandbox internally — see the box at the
+   top), so these are fine even if they're locked/greyed out:
+   - Install: `corepack enable && pnpm install --frozen-lockfile`
+   - Build: `pnpm build` (auto-skips on the host via `scripts/build.mjs`)
+   - Start: `pnpm start`
    - Node version: **22.x** (required for built-in `node:sqlite`).
 
 Once you've identified it, jot it at the top of this file so future-you doesn't
@@ -225,6 +225,6 @@ have to rediscover it:
 | Back up DB | hPanel → File Manager → `data/` → download `.db` |
 | Roll back | `git revert <sha>` → push → redeploy |
 | Required Node (build + runtime) | **22.x** |
-| Hostinger install cmd | `true` (or `pnpm install --prod --frozen-lockfile`) |
-| Hostinger build cmd | `true` (no-op — `dist/` is committed) |
-| Hostinger start cmd | `node --no-warnings server/index.js` |
+| Hostinger install cmd | `corepack enable && pnpm install --frozen-lockfile` |
+| Hostinger build cmd | `pnpm build` (auto-skips on host) |
+| Hostinger start cmd | `pnpm start` |

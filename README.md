@@ -36,38 +36,40 @@ In **hPanel → Node.js → Environment Variables**, add:
 
 ### 4. Set the build commands
 
-Hostinger will ask for:
+Hostinger's standard auto-detected commands work as-is (you don't need to
+change them — and on some plans they're locked anyway):
 
 | Field | Value |
 |---|---|
-| **Install command** | `true` *(no-op — see below)* |
-| **Build command** | `true` *(no-op — `dist/` is prebuilt & committed)* |
-| **Start command** | `node --no-warnings server/index.js` |
+| **Install command** | `corepack enable && pnpm install --frozen-lockfile` |
+| **Build command** | `pnpm build` |
+| **Start command** | `pnpm start` |
 
-> 🛑 **Do not build on Hostinger.** Hostinger's build sandbox is mounted
-> **noexec**, so `esbuild` (used by Vite) cannot execute its native binary and
-> the build fails with `EACCES`. Instead, the frontend is **built locally and
-> committed** as `dist/` (see [DEPLOYING.md](DEPLOYING.md)). The Node server has
-> **zero runtime dependencies**, so Hostinger needs *no* install or build step —
-> it just runs the server, which serves the prebuilt `dist/` as static files
-> plus the API from one process on Hostinger's assigned port.
->
-> If Hostinger forces a non-empty install command, use
-> `pnpm install --prod --frozen-lockfile` — with no runtime dependencies it
-> installs nothing and never touches esbuild. **Never** use a plain
-> `pnpm install` here: it would pull in esbuild and fail on the noexec sandbox.
+> 🛑 **Hostinger can't actually build the frontend** — its build sandbox is
+> mounted **noexec**, so `esbuild` (used by Vite) can't execute its native
+> binary. The repo is set up to handle this so the commands above still succeed:
+> - **Install:** [`pnpm-workspace.yaml`](pnpm-workspace.yaml) sets
+>   `allowBuilds: { esbuild: false }`, so pnpm skips esbuild's postinstall
+>   (which would hit `EACCES`). Vite still finds the esbuild binary locally, so
+>   local builds are unaffected.
+> - **Build:** `pnpm build` runs [`scripts/build.mjs`](scripts/build.mjs), which
+>   detects Hostinger's sandbox and **skips** the Vite build, serving the
+>   **committed `dist/`** instead. Locally it runs the real build.
+> - **Start:** the Node server has **zero runtime dependencies** and serves the
+>   prebuilt `dist/` + the API from one process on Hostinger's assigned port.
 
 ### 5. Deploy
 
-1. **Locally**, rebuild and commit the frontend whenever it changes:
+1. **Locally**, rebuild and commit the frontend whenever you change `src/`:
    ```bash
    nvm use 22 && corepack enable   # Node 22 + pnpm 11 are required to build
    pnpm install
-   pnpm build                      # regenerates dist/
+   pnpm build                      # regenerates dist/ (runs the real Vite build locally)
    git add dist && git commit -m "Rebuild frontend" && git push
    ```
-2. **In hPanel**, sync the repo and click **Deploy**. Hostinger pulls the
-   committed `dist/` and starts the server — no install/build runs.
+   Backend-only changes under `server/` don't need a rebuild.
+2. **In hPanel**, sync the repo and click **Deploy**. Hostinger installs (no
+   esbuild), skips the build, pulls the committed `dist/`, and starts the server.
 
 The server automatically detects the `dist/` folder and serves the frontend as static files.
 

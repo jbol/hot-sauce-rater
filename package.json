@@ -9,7 +9,8 @@
     "dev:server": "node --watch --no-warnings server/index.js",
     "dev:client": "vite",
     "dev": "node --no-warnings server/index.js & vite",
-    "build": "vite build",
+    "build": "node scripts/build.mjs",
+    "build:vite": "vite build",
     "preview": "vite preview",
     "start": "NODE_ENV=production node --no-warnings server/index.js"
   },
