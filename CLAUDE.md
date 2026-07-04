@@ -85,10 +85,15 @@ graph TD
 
 ## Deploy (Hostinger — see DEPLOYING.md for full flow)
 
-hPanel Node 22.x · env `JWT_SECRET` (server refuses to start in prod without it),
-`NODE_ENV=production` · install/build/start commands are locked but succeed by
-design (pnpm-workspace.yaml disables esbuild postinstall; build.mjs skips; server
-serves committed `dist/`). SQLite file at `data/` — back up before redeploys.
+Two paths. **Managed Node.js hosting:** hPanel Node 22.x · env `JWT_SECRET`
+(server refuses to start in prod without it), `NODE_ENV=production` ·
+install/build/start commands are locked but succeed by design
+(pnpm-workspace.yaml disables esbuild postinstall; build.mjs skips; server
+serves committed `dist/`). **VPS:** systemd + nginx; templates in `deploy/`
+(`.service`, `nginx.conf`, `deploy.sh`, env example), walkthrough in
+DEPLOYING.md. Zero runtime deps + committed `dist/` ⇒ no build/install on the
+box; just Node 22 + run. HTTPS is required (auth cookie is `Secure` in prod).
+SQLite file at `data/` — back up before redeploys.
 
 ## Gotchas checklist
 
