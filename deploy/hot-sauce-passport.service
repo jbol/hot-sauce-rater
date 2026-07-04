@@ -1,0 +1,46 @@
+# systemd service for Pasaporte Picante (Hot Sauce Passport)
+#
+# Install on the VPS:
+#   sudo cp deploy/hot-sauce-passport.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now hot-sauce-passport
+#
+# Edit the two __PLACEHOLDERS__ below to match your box before installing.
+# Full walkthrough: DEPLOYING.md → "Deploying on a Hostinger VPS".
+
+[Unit]
+Description=Pasaporte Picante (Hot Sauce Passport)
+After=network.target
+
+[Service]
+Type=simple
+
+# Dedicated non-root user that owns the repo checkout.
+User=__APP_USER__
+Group=__APP_USER__
+
+# Absolute path to the repo on the VPS, e.g. /var/www/hot-sauce-passport
+WorkingDirectory=__APP_DIR__
+
+# Secrets & config live OUTSIDE the repo so they're never committed.
+# Create this file (see DEPLOYING.md); it must contain at least JWT_SECRET:
+#   NODE_ENV=production
+#   PORT=3001
+#   JWT_SECRET=<long random hex>
+EnvironmentFile=/etc/hot-sauce-passport.env
+
+# Node 22 from NodeSource installs to /usr/bin/node. If you used nvm instead,
+# point this at the absolute path from `which node`.
+# If your Node build complains that "node:sqlite" is unknown, add
+# --experimental-sqlite before server/index.js.
+ExecStart=/usr/bin/node --no-warnings server/index.js
+
+Restart=on-failure
+RestartSec=3
+
+# Light hardening (the app only needs to write to its own data/ folder).
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

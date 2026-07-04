@@ -1,165 +1,118 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import FanGauge from './FanGauge';
+import { AzulejoStrip, Divider, FanEmblem } from './Ornaments';
+import { HEAT_LEVELS } from '../utils/heat';
+
+// The "oficina de expedición" — where passports are issued. A flamenco
+// poster on the left, the paper application form on the right.
 
 export default function AuthPage() {
   const { login, register } = useAuth();
-  const [mode, setMode] = useState('login'); // 'login' | 'register'
-  const [form, setForm] = useState({ email: '', password: '', name: '', confirmPassword: '' });
-  const [fieldErrors, setFieldErrors] = useState({});
-  const [serverError, setServerError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [mode, setMode] = useState('login');
+  const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [error, setError] = useState(null);
+  const [busy, setBusy] = useState(false);
 
-  const handleChange = (e) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-    setFieldErrors((prev) => ({ ...prev, [e.target.name]: '' }));
-    setServerError('');
-  };
+  const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
-  const validate = () => {
-    const errs = {};
-    if (!form.email) errs.email = 'Email is required';
-    else if (!/\S+@\S+\.\S+/.test(form.email)) errs.email = 'Enter a valid email address';
-
-    if (!form.password) errs.password = 'Password is required';
-    else if (form.password.length < 8) errs.password = 'Password must be at least 8 characters';
-
-    if (mode === 'register') {
-      if (!/[A-Za-z]/.test(form.password)) errs.password = 'Password must include at least one letter';
-      if (!/[0-9]/.test(form.password)) errs.password = 'Password must include at least one number';
-      if (!form.name.trim()) errs.name = 'Your name is required';
-      if (form.password !== form.confirmPassword) errs.confirmPassword = 'Passwords do not match';
-    }
-
-    return errs;
+  const switchMode = (m) => {
+    setMode(m);
+    setError(null);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const errs = validate();
-    if (Object.keys(errs).length > 0) {
-      setFieldErrors(errs);
-      return;
-    }
-
-    setLoading(true);
-    setServerError('');
-
+    setBusy(true);
+    setError(null);
     try {
-      if (mode === 'login') {
-        await login(form.email, form.password);
-      } else {
-        await register(form.email, form.password, form.name);
-      }
+      if (mode === 'login') await login(form.email, form.password);
+      else await register(form.email, form.password, form.name);
     } catch (err) {
-      setServerError(err.message || 'Something went wrong. Please try again.');
-    } finally {
-      setLoading(false);
+      setError(err.message);
+      setBusy(false);
     }
-  };
-
-  const switchMode = () => {
-    setMode((m) => (m === 'login' ? 'register' : 'login'));
-    setFieldErrors({});
-    setServerError('');
-    setForm({ email: '', password: '', name: '', confirmPassword: '' });
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
-        <div className="auth-emblem">🔥</div>
-        <h1 className="auth-title">Hot Sauce Passport</h1>
-        <p className="auth-tagline">
-          {mode === 'login'
-            ? 'Welcome back, spice traveller'
-            : 'Join the Republic of Spice'}
-        </p>
+    <div className="auth">
+      <div className="auth-stage">
+        <div className="auth-poster">
+          <FanEmblem size={190} className="auth-emblem" />
+          <h1 className="auth-title">PASAPORTE<br />PICANTE</h1>
+          <div className="auth-subtitle">HOT SAUCE PASSPORT</div>
+          <Divider className="auth-divider" />
+          <p className="auth-tagline">
+            Registra cada salsa que pruebas. Colecciona sellos.
+            Camina del fuego suave al infierno.
+          </p>
+          <p className="auth-tagline-en">
+            Record every sauce you try — ranked from mild to inferno.
+          </p>
+          <div className="auth-legend">
+            {HEAT_LEVELS.map((l) => (
+              <div key={l.key} className="auth-legend-item">
+                <FanGauge heat={l.max} size={46} showGuards={false} />
+                <span>{l.es}</span>
+              </div>
+            ))}
+          </div>
+        </div>
 
-        <form onSubmit={handleSubmit} className="auth-form" noValidate>
-          {mode === 'register' && (
-            <div className="form-group">
-              <label htmlFor="name">Full Name</label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                placeholder="Jane Smith"
-                value={form.name}
-                onChange={handleChange}
-                className={fieldErrors.name ? 'input-error' : ''}
-                autoComplete="name"
-              />
-              {fieldErrors.name && <span className="field-error">{fieldErrors.name}</span>}
+        <div className="auth-card">
+          <AzulejoStrip height={12} />
+          <div className="auth-card-body">
+            <div className="auth-office">OFICINA DE EXPEDICIÓN · passport office</div>
+
+            <div className="auth-tabs" role="tablist">
+              <button
+                role="tab"
+                aria-selected={mode === 'login'}
+                className={`auth-tab ${mode === 'login' ? 'auth-tab-active' : ''}`}
+                onClick={() => switchMode('login')}
+              >
+                ENTRAR
+              </button>
+              <button
+                role="tab"
+                aria-selected={mode === 'register'}
+                className={`auth-tab ${mode === 'register' ? 'auth-tab-active' : ''}`}
+                onClick={() => switchMode('register')}
+              >
+                CREAR CUENTA
+              </button>
             </div>
-          )}
 
-          <div className="form-group">
-            <label htmlFor="email">Email Address</label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              placeholder="jane@example.com"
-              value={form.email}
-              onChange={handleChange}
-              className={fieldErrors.email ? 'input-error' : ''}
-              autoComplete="email"
-            />
-            {fieldErrors.email && <span className="field-error">{fieldErrors.email}</span>}
-          </div>
+            {error && <div className="form-error" role="alert">{error}</div>}
 
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              placeholder={mode === 'register' ? '8+ chars, include a letter and number' : '••••••••'}
-              value={form.password}
-              onChange={handleChange}
-              className={fieldErrors.password ? 'input-error' : ''}
-              autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-            />
-            {fieldErrors.password && <span className="field-error">{fieldErrors.password}</span>}
-          </div>
-
-          {mode === 'register' && (
-            <div className="form-group">
-              <label htmlFor="confirmPassword">Confirm Password</label>
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                placeholder="••••••••"
-                value={form.confirmPassword}
-                onChange={handleChange}
-                className={fieldErrors.confirmPassword ? 'input-error' : ''}
-                autoComplete="new-password"
-              />
-              {fieldErrors.confirmPassword && (
-                <span className="field-error">{fieldErrors.confirmPassword}</span>
+            <form onSubmit={handleSubmit} className="auth-form">
+              {mode === 'register' && (
+                <label className="ffield">
+                  <span className="ffield-label">NOMBRE <i>Name</i></span>
+                  <input value={form.name} onChange={set('name')} maxLength={100} required autoFocus placeholder="Carmen la Valiente" />
+                </label>
               )}
-            </div>
-          )}
+              <label className="ffield">
+                <span className="ffield-label">CORREO <i>Email</i></span>
+                <input type="email" value={form.email} onChange={set('email')} required autoFocus={mode === 'login'} placeholder="carmen@sevilla.es" />
+              </label>
+              <label className="ffield">
+                <span className="ffield-label">CONTRASEÑA <i>Password</i></span>
+                <input type="password" value={form.password} onChange={set('password')} required placeholder="••••••••" />
+                {mode === 'register' && (
+                  <span className="ffield-hint">Mínimo 8 caracteres, con letra y número.</span>
+                )}
+              </label>
 
-          {serverError && <div className="server-error">{serverError}</div>}
-
-          <button type="submit" className="auth-submit-btn" disabled={loading}>
-            {loading
-              ? 'Please wait…'
-              : mode === 'login'
-              ? 'Sign In'
-              : 'Create Account'}
-          </button>
-        </form>
-
-        <p className="auth-switch">
-          {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
-          <button onClick={switchMode} className="link-btn">
-            {mode === 'login' ? 'Sign up' : 'Sign in'}
-          </button>
-        </p>
+              <button type="submit" className="btn-gold auth-submit" disabled={busy}>
+                {busy ? 'UN MOMENTO…' : mode === 'login' ? 'ABRIR MI PASAPORTE' : 'EXPEDIR PASAPORTE'}
+              </button>
+            </form>
+          </div>
+        </div>
       </div>
+
+      <footer className="auth-foot">REINO DEL PICANTE · de suave a infierno</footer>
     </div>
   );
 }

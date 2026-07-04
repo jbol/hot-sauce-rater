@@ -1,6 +1,18 @@
-# 🌶️ Hot Sauce Passport
+# 🌶️ Pasaporte Picante · Hot Sauce Passport
 
-A full-stack hot sauce rating app. Users register, log in, and collect passport stamps as they rate each sauce.
+A flamenco-inspired passport for every hot sauce you've tried. Each sauce you
+record becomes a stamped **"visa de fuego"** page, and the passport's pages are
+ordered **least → most spicy** (your own 1–10 fire ranking; Scoville breaks
+ties). The design borrows from Andalusia: a carmine leather cover, lunares
+(polka-dot) linings, azulejo tile borders, a folding-fan heat gauge that opens
+with the fire, and a circular "PROBADO" rubber stamp on every page.
+
+- **Passport book UI** — 3D page-flip spreads on desktop, single pages on mobile
+- **Record sauces you've tried** — name, brand, origin, peppers, fire scale
+  (1–10), star rating, Scoville, date, tasting notes; edit or "tear out" pages
+- **ID page** — bearer info, rank title, stats, and a machine-readable zone
+- Legacy v2 catalogue ratings are migrated into passport entries automatically
+  on first boot (one-time, flagged in the `meta` table)
 
 **Stack:** React + Vite frontend · Pure Node.js 22 backend (zero runtime dependencies for the server) · Built-in SQLite (`node:sqlite`) · **pnpm** for package management
 
@@ -129,26 +141,50 @@ pnpm start
 ```
 hot-sauce-rater/
 ├── server/
-│   ├── index.js        # HTTP server, routing, rate limiting
-│   ├── db.js           # SQLite setup and schema
-│   └── auth.js         # Password hashing (scrypt) + token signing (HMAC-SHA256)
+│   ├── index.js             # HTTP server, routing, rate limiting, entries API
+│   ├── db.js                # SQLite setup, schema, one-time legacy migration
+│   ├── auth.js              # Password hashing (scrypt) + token signing (HMAC-SHA256)
+│   ├── legacy-catalogue.js  # v2 static catalogue (used only by the migration)
+│   └── schema.sql           # Documented schema reference
 ├── src/
 │   ├── components/
-│   │   ├── AuthPage.jsx         # Login / register UI
-│   │   ├── PassportHome.jsx     # Passport cover + stamps view
-│   │   ├── PassportStamp.jsx    # Individual circular stamp
-│   │   └── ExploreView.jsx      # Browse / filter / sort sauces
+│   │   ├── AuthPage.jsx     # "Oficina de expedición" — login / register
+│   │   ├── PassportBook.jsx # The book: 3D flip spreads / mobile single pages
+│   │   ├── PassportPages.jsx# Cover, linings, ID, fire scale, visas, add page
+│   │   ├── EntryForm.jsx    # "Registro de salsa" modal (add / edit)
+│   │   ├── FanGauge.jsx     # Folding-fan heat gauge & picker (1–10)
+│   │   ├── StampSeal.jsx    # Circular "PROBADO" rubber stamp
+│   │   ├── StarRating.jsx   # Gold stars (display + picker)
+│   │   └── Ornaments.jsx    # Azulejo strips, chili glyph, dividers, emblem
 │   ├── contexts/
-│   │   ├── AuthContext.jsx      # Session state (restored from cookie on load)
-│   │   └── SaucesContext.jsx    # Ratings + favorites synced to backend
-│   ├── data/
-│   │   └── hotSauces.js         # Static sauce catalogue
+│   │   ├── AuthContext.jsx     # Session state (restored from cookie on load)
+│   │   └── EntriesContext.jsx  # Sauce entries CRUD, sorted mild → inferno
 │   ├── services/
-│   │   └── api.js               # Fetch wrapper (credentials: include)
+│   │   └── api.js           # Fetch wrapper (credentials: include)
+│   ├── utils/
+│   │   └── heat.js          # Fire-scale levels, colours, sorting, formatting
 │   ├── App.jsx
-│   └── index.css
-├── data/                        # Auto-created; holds the SQLite DB (gitignored)
-├── dist/                        # Built frontend (gitignored)
+│   └── index.css            # Flamenco design system
+├── data/                    # Auto-created; holds the SQLite DB (gitignored)
+├── dist/                    # Built frontend (COMMITTED — Hostinger can't build)
 ├── package.json
 └── vite.config.js
 ```
+
+---
+
+## API
+
+All endpoints are cookie-authenticated (`token`, HttpOnly). Entries belong to
+the signed-in user.
+
+| Method | Path | Purpose |
+|---|---|---|
+| `POST` | `/api/auth/register` | Create account (also signs in) |
+| `POST` | `/api/auth/login` | Sign in |
+| `POST` | `/api/auth/logout` | Sign out |
+| `GET` | `/api/auth/me` | Current user |
+| `GET` | `/api/entries` | List sauces, ordered heat → Scoville → name |
+| `POST` | `/api/entries` | Record a sauce (`name`, `heat` 1–10 required) |
+| `PUT` | `/api/entries/:id` | Update a sauce (full object) |
+| `DELETE` | `/api/entries/:id` | Tear the page out |

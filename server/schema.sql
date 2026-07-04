@@ -5,14 +5,17 @@
 -- Scope  : the tables the running app reads/writes today.
 --
 -- Design notes
---   * sauce_id values reference the STATIC catalogue in
---     src/data/hotSauces.js (ids 1..N). Sauces are not stored in the DB,
---     so sauce_id has no foreign key. See the optional `sauces` table at
---     the end if you want to make the catalogue data-driven.
+--   * Every sauce a user has tried is an `entries` row — one passport page
+--     each. Sauces are user-recorded (no shared catalogue); `heat` (1–10) is
+--     the user's own fire ranking and pages are ordered by it, least → most
+--     spicy (Scoville breaks ties, then name).
 --   * Auth tokens are stateless (signed HMAC-SHA256, see server/auth.js),
 --     so there is deliberately no sessions/tokens table.
 --   * Passwords are stored as a scrypt "salt:derivedKey" hex string —
 --     never plaintext.
+--   * The legacy v2 tables (`ratings`, `favorites`) referenced a static
+--     catalogue. On first boot after upgrading, db.js migrates each old
+--     rating into an `entries` row (flagged in `meta` so it runs once).
 -- ============================================================================
 
 PRAGMA foreign_keys = ON;   -- enforce FK constraints (set per-connection at runtime too)
@@ -27,57 +30,52 @@ CREATE TABLE IF NOT EXISTS users (
   created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- ── ratings ─────────────────────────────────────────────────────────────────
--- A user's 1–5 star rating of a sauce. At most one row per (user, sauce):
--- re-rating UPSERTs in place and refreshes rated_at.
+-- ── entries ─────────────────────────────────────────────────────────────────
+-- A sauce the user has tried — one passport page each.
+CREATE TABLE IF NOT EXISTS entries (
+  id              INTEGER  PRIMARY KEY AUTOINCREMENT,
+  user_id         INTEGER  NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name            TEXT     NOT NULL,                       -- sauce name (required)
+  brand           TEXT     NOT NULL DEFAULT '',            -- maker, e.g. "Huy Fong"
+  origin          TEXT     NOT NULL DEFAULT '',            -- e.g. "Louisiana, USA"
+  peppers         TEXT     NOT NULL DEFAULT '',            -- e.g. "Habanero, Chipotle"
+  heat            INTEGER  NOT NULL CHECK (heat BETWEEN 1 AND 10),   -- fire scale (sort key)
+  rating          INTEGER  CHECK (rating BETWEEN 1 AND 5), -- how much they liked it (optional)
+  scoville        INTEGER  CHECK (scoville >= 0),          -- SHU (optional; tie-breaker)
+  notes           TEXT     NOT NULL DEFAULT '',            -- tasting notes
+  tried_on        TEXT     NOT NULL DEFAULT (date('now')), -- ISO date "YYYY-MM-DD"
+  source_sauce_id INTEGER,                                 -- v2 catalogue id if migrated, else NULL
+  created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE (user_id, source_sauce_id)                        -- migration idempotency (NULLs are distinct)
+);
+
+-- Serves the passport-page query:
+--   SELECT * FROM entries WHERE user_id = ? ORDER BY heat, COALESCE(scoville,-1), name
+CREATE INDEX IF NOT EXISTS idx_entries_user_heat ON entries (user_id, heat, scoville);
+
+-- ── meta ────────────────────────────────────────────────────────────────────
+-- Tiny key/value store for one-time flags (e.g. 'legacy_ratings_migrated').
+CREATE TABLE IF NOT EXISTS meta (
+  key   TEXT PRIMARY KEY,
+  value TEXT NOT NULL
+);
+
+-- ── legacy v2 tables ────────────────────────────────────────────────────────
+-- No longer written by the app. Kept (not dropped) so the one-time startup
+-- migration can read old data, and as a safety net for rollbacks.
 CREATE TABLE IF NOT EXISTS ratings (
   id        INTEGER  PRIMARY KEY AUTOINCREMENT,
   user_id   INTEGER  NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  sauce_id  INTEGER  NOT NULL,                             -- → src/data/hotSauces.js
+  sauce_id  INTEGER  NOT NULL,                             -- → old static catalogue
   rating    INTEGER  NOT NULL CHECK (rating BETWEEN 1 AND 5),
   rated_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE (user_id, sauce_id)
 );
 
--- ── favorites ───────────────────────────────────────────────────────────────
--- A user's favorited sauces. Row present = favorited; the "favorite" endpoint
--- toggles by inserting/deleting. At most one row per (user, sauce).
 CREATE TABLE IF NOT EXISTS favorites (
   id         INTEGER  PRIMARY KEY AUTOINCREMENT,
   user_id    INTEGER  NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  sauce_id   INTEGER  NOT NULL,                            -- → src/data/hotSauces.js
+  sauce_id   INTEGER  NOT NULL,                            -- → old static catalogue
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE (user_id, sauce_id)
 );
-
--- ── indexes ─────────────────────────────────────────────────────────────────
--- The UNIQUE(user_id, sauce_id) constraints already index the common
--- "all rows for this user" lookups (leftmost-prefix on user_id), which covers
--- the favorites reads and the (user_id, sauce_id) point lookups.
--- This extra index serves the "my ratings, newest first" query:
---   SELECT sauce_id, rating, rated_at FROM ratings WHERE user_id = ? ORDER BY rated_at DESC
-CREATE INDEX IF NOT EXISTS idx_ratings_user_recent ON ratings (user_id, rated_at DESC);
-
-
--- ============================================================================
--- OPTIONAL — data-driven sauce catalogue
--- ----------------------------------------------------------------------------
--- The app currently ships the catalogue as a static JS array. If you'd rather
--- store sauces in the DB (so you can add/edit them without a redeploy),
--- uncomment the block below. You can then add real foreign keys on sauce_id
--- in ratings/favorites, e.g.  sauce_id INTEGER NOT NULL REFERENCES sauces(id).
--- ============================================================================
---
--- CREATE TABLE IF NOT EXISTS sauces (
---   id           INTEGER PRIMARY KEY,                 -- match existing catalogue ids
---   name         TEXT    NOT NULL,
---   brand        TEXT    NOT NULL,
---   heat_level   INTEGER NOT NULL CHECK (heat_level BETWEEN 1 AND 5),
---   max_heat     INTEGER NOT NULL DEFAULT 5,
---   description  TEXT    NOT NULL DEFAULT '',
---   origin       TEXT    NOT NULL DEFAULT '',
---   peppers      TEXT    NOT NULL DEFAULT '[]',        -- JSON array, e.g. ["Habanero"]
---   scoville     TEXT    NOT NULL DEFAULT '',          -- range string, e.g. "1,000-2,500"
---   created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
--- );
--- CREATE INDEX IF NOT EXISTS idx_sauces_heat ON sauces (heat_level);

@@ -195,7 +195,10 @@ async function registerHandler(req, res, _cookies) {
 
   const token = signToken({ userId: result.lastInsertRowid });
   setAuthCookie(res, token);
-  json(res, 201, { user: { id: result.lastInsertRowid, email: email.toLowerCase(), name: name.trim() } });
+  const user = db
+    .prepare('SELECT id, email, name, created_at FROM users WHERE id = ?')
+    .get(result.lastInsertRowid);
+  json(res, 201, { user });
 }
 
 // POST /api/auth/login
@@ -250,27 +253,80 @@ function meHandler(_req, res, cookies) {
   json(res, 200, { user });
 }
 
-// GET /api/sauces/user-data
-function userDataHandler(_req, res, cookies) {
+// ── Passport entries (sauces the user has tried) ────────────────────────────
+// Pages of the passport are ordered least → most spicy, so the list endpoint
+// sorts by the user's 1–10 heat ranking (Scoville breaks ties, then name).
+
+function entryToJson(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    brand: row.brand,
+    origin: row.origin,
+    peppers: row.peppers,
+    heat: row.heat,
+    rating: row.rating,
+    scoville: row.scoville,
+    notes: row.notes,
+    triedOn: row.tried_on,
+    createdAt: row.created_at,
+  };
+}
+
+const trimmed = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
+const isIsoDate = (v) => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(v));
+
+// Validates a create/update payload. Returns { error } or { values }.
+function parseEntryBody(body) {
+  const name = trimmed(body.name, 120);
+  if (!name) return { error: 'Sauce name is required' };
+
+  const heat = body.heat;
+  if (!Number.isInteger(heat) || heat < 1 || heat > 10)
+    return { error: 'Heat must be an integer between 1 and 10' };
+
+  const rating = body.rating ?? null;
+  if (rating !== null && (!Number.isInteger(rating) || rating < 1 || rating > 5))
+    return { error: 'Rating must be between 1 and 5' };
+
+  const scoville = body.scoville ?? null;
+  if (scoville !== null && (!Number.isInteger(scoville) || scoville < 0 || scoville > 16_000_000))
+    return { error: 'Scoville must be a number between 0 and 16,000,000' };
+
+  const triedOn = body.triedOn ?? null;
+  if (triedOn !== null && !isIsoDate(triedOn))
+    return { error: 'Date tried must be YYYY-MM-DD' };
+
+  return {
+    values: {
+      name,
+      brand: trimmed(body.brand, 120),
+      origin: trimmed(body.origin, 120),
+      peppers: trimmed(body.peppers, 120),
+      heat,
+      rating,
+      scoville,
+      notes: trimmed(body.notes, 2000),
+      triedOn: triedOn || new Date().toISOString().slice(0, 10),
+    },
+  };
+}
+
+// GET /api/entries
+function listEntriesHandler(_req, res, cookies) {
   const payload = requireAuth(cookies, res);
   if (!payload) return;
 
-  const ratingsRows = db
-    .prepare('SELECT sauce_id, rating, rated_at FROM ratings WHERE user_id = ? ORDER BY rated_at DESC')
-    .all(payload.userId);
-  const favRows = db
-    .prepare('SELECT sauce_id FROM favorites WHERE user_id = ?')
-    .all(payload.userId);
+  const rows = db.prepare(`
+    SELECT * FROM entries WHERE user_id = ?
+    ORDER BY heat ASC, COALESCE(scoville, -1) ASC, name COLLATE NOCASE ASC
+  `).all(payload.userId);
 
-  const ratings = {};
-  for (const r of ratingsRows) {
-    ratings[r.sauce_id] = { rating: r.rating, ratedAt: r.rated_at };
-  }
-  json(res, 200, { ratings, favorites: favRows.map((f) => f.sauce_id) });
+  json(res, 200, { entries: rows.map(entryToJson) });
 }
 
-// POST /api/sauces/rate
-async function rateHandler(req, res, cookies) {
+// POST /api/entries
+async function createEntryHandler(req, res, cookies) {
   const payload = requireAuth(cookies, res);
   if (!payload) return;
 
@@ -278,22 +334,21 @@ async function rateHandler(req, res, cookies) {
   try { body = await readBody(req); }
   catch (e) { return json(res, 400, { error: e.message }); }
 
-  const { sauceId, rating } = body;
-  if (!Number.isInteger(sauceId) || sauceId < 1) return json(res, 400, { error: 'Invalid sauce ID' });
-  if (!Number.isInteger(rating) || rating < 1 || rating > 5)
-    return json(res, 400, { error: 'Rating must be between 1 and 5' });
+  const parsed = parseEntryBody(body);
+  if (parsed.error) return json(res, 400, { error: parsed.error });
+  const v = parsed.values;
 
-  db.prepare(`
-    INSERT INTO ratings (user_id, sauce_id, rating) VALUES (?, ?, ?)
-    ON CONFLICT(user_id, sauce_id)
-    DO UPDATE SET rating = excluded.rating, rated_at = CURRENT_TIMESTAMP
-  `).run(payload.userId, sauceId, rating);
+  const result = db.prepare(`
+    INSERT INTO entries (user_id, name, brand, origin, peppers, heat, rating, scoville, notes, tried_on)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(payload.userId, v.name, v.brand, v.origin, v.peppers, v.heat, v.rating, v.scoville, v.notes, v.triedOn);
 
-  json(res, 200, { success: true, sauceId, rating });
+  const row = db.prepare('SELECT * FROM entries WHERE id = ?').get(result.lastInsertRowid);
+  json(res, 201, { entry: entryToJson(row) });
 }
 
-// POST /api/sauces/favorite
-async function favoriteHandler(req, res, cookies) {
+// PUT /api/entries/:id
+async function updateEntryHandler(req, res, cookies, params) {
   const payload = requireAuth(cookies, res);
   if (!payload) return;
 
@@ -301,31 +356,48 @@ async function favoriteHandler(req, res, cookies) {
   try { body = await readBody(req); }
   catch (e) { return json(res, 400, { error: e.message }); }
 
-  const { sauceId } = body;
-  if (!Number.isInteger(sauceId) || sauceId < 1) return json(res, 400, { error: 'Invalid sauce ID' });
+  const parsed = parseEntryBody(body);
+  if (parsed.error) return json(res, 400, { error: parsed.error });
+  const v = parsed.values;
+  const entryId = Number(params[0]);
 
-  const existing = db
-    .prepare('SELECT id FROM favorites WHERE user_id = ? AND sauce_id = ?')
-    .get(payload.userId, sauceId);
+  const result = db.prepare(`
+    UPDATE entries
+    SET name = ?, brand = ?, origin = ?, peppers = ?, heat = ?, rating = ?, scoville = ?, notes = ?, tried_on = ?
+    WHERE id = ? AND user_id = ?
+  `).run(v.name, v.brand, v.origin, v.peppers, v.heat, v.rating, v.scoville, v.notes, v.triedOn, entryId, payload.userId);
 
-  if (existing) {
-    db.prepare('DELETE FROM favorites WHERE user_id = ? AND sauce_id = ?').run(payload.userId, sauceId);
-    json(res, 200, { favorited: false });
-  } else {
-    db.prepare('INSERT INTO favorites (user_id, sauce_id) VALUES (?, ?)').run(payload.userId, sauceId);
-    json(res, 200, { favorited: true });
-  }
+  if (Number(result.changes) === 0) return json(res, 404, { error: 'Entry not found' });
+
+  const row = db.prepare('SELECT * FROM entries WHERE id = ?').get(entryId);
+  json(res, 200, { entry: entryToJson(row) });
+}
+
+// DELETE /api/entries/:id
+function deleteEntryHandler(_req, res, cookies, params) {
+  const payload = requireAuth(cookies, res);
+  if (!payload) return;
+
+  const result = db
+    .prepare('DELETE FROM entries WHERE id = ? AND user_id = ?')
+    .run(Number(params[0]), payload.userId);
+
+  if (Number(result.changes) === 0) return json(res, 404, { error: 'Entry not found' });
+  json(res, 200, { success: true });
 }
 
 // ── Route table ──────────────────────────────────────────────────────────────
+// Paths are exact strings or RegExps; capture groups become the handler's
+// `params` argument.
 const ROUTES = [
-  ['POST', '/api/auth/register',     registerHandler],
-  ['POST', '/api/auth/login',        loginHandler],
-  ['POST', '/api/auth/logout',       logoutHandler],
-  ['GET',  '/api/auth/me',           meHandler],
-  ['GET',  '/api/sauces/user-data',  userDataHandler],
-  ['POST', '/api/sauces/rate',       rateHandler],
-  ['POST', '/api/sauces/favorite',   favoriteHandler],
+  ['POST',   '/api/auth/register',        registerHandler],
+  ['POST',   '/api/auth/login',           loginHandler],
+  ['POST',   '/api/auth/logout',          logoutHandler],
+  ['GET',    '/api/auth/me',              meHandler],
+  ['GET',    '/api/entries',              listEntriesHandler],
+  ['POST',   '/api/entries',              createEntryHandler],
+  ['PUT',    /^\/api\/entries\/(\d+)$/,   updateEntryHandler],
+  ['DELETE', /^\/api\/entries\/(\d+)$/,   deleteEntryHandler],
 ];
 
 // ── Main request dispatcher ──────────────────────────────────────────────────
@@ -337,18 +409,30 @@ async function dispatch(req, res) {
     // CORS headers (needed in dev where Vite runs on a different port)
     res.setHeader('Access-Control-Allow-Origin', CLIENT_ORIGIN);
     res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
     if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
 
     const cookies = parseCookies(req);
-    const route = ROUTES.find(([m, p]) => m === req.method && p === pathname);
 
-    if (!route) return json(res, 404, { error: 'Not found' });
+    let handler = null;
+    let params = [];
+    for (const [method, path, fn] of ROUTES) {
+      if (method !== req.method) continue;
+      if (path instanceof RegExp) {
+        const match = path.exec(pathname);
+        if (match) { handler = fn; params = match.slice(1); break; }
+      } else if (path === pathname) {
+        handler = fn;
+        break;
+      }
+    }
+
+    if (!handler) return json(res, 404, { error: 'Not found' });
 
     try {
-      await route[2](req, res, cookies);
+      await handler(req, res, cookies, params);
     } catch (err) {
       console.error(`Error in ${req.method} ${pathname}:`, err);
       json(res, 500, { error: 'Internal server error' });
