@@ -39,7 +39,7 @@ graph TD
     AC & EC --> API[services/api.js] -->|fetch /api, cookies| IDX
     PP & EF & AP --> FG[components/FanGauge]
     PP --> SS[components/StampSeal]
-    PP & EF & AP --> OR[components/Ornaments<br/>AzulejoStrip · ChiliIcon · Divider · FanEmblem · DancerEmblem]
+    PP & EF & AP --> OR[components/Ornaments<br/>AzulejoStrip · ChiliIcon · Divider · FanEmblem]
     PP & EF --> SR[components/StarRating]
     PP & EF & EC --> HU[utils/heat.js<br/>HEAT_LEVELS · byHeat · formatDate/Scoville]
   end
