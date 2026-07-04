@@ -101,5 +101,14 @@ SQLite file at `data/` — back up before redeploys.
 - New API routes: add to `ROUTES`; remember CORS methods header lists allowed verbs.
 - `useLocalStorage`, Express routes, static catalogue = removed in v3; don't reintroduce.
 - Google Fonts come from CDN (index.html); offline dev falls back to system serif.
-- Tests: none — verify via `.claude/launch.json` preview servers (register a fresh
-  user; local DB is gitignored).
+- Tests: `pnpm test` → Node's built-in runner (zero deps) over `tests/*.test.js`.
+  Each file = own process + throwaway SQLite (helpers.js sets `DB_PATH` before
+  importing the server; index.js exports `server` and only auto-listens as main).
+  api.test.js budget: stay under 20 auth calls/file (rate limit is per-process).
+- CI (`.github/workflows/ci.yml`): push/PR → tests + build + **stale-dist check**
+  (fails if committed `dist/` ≠ fresh build). CD (`deploy.yml`): publishing a
+  GitHub Release (or manual dispatch) → CI gate → SSH `deploy.sh` on the VPS via
+  command-restricted key (secrets `VPS_SSH_KEY`/`VPS_HOST`) → live smoke check.
+  Release = `gh release create vX.Y.Z --generate-notes`.
+- Manual UI checks still via `.claude/launch.json` preview servers (register a
+  fresh user; local DB is gitignored).

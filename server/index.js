@@ -12,7 +12,7 @@
 import { createServer } from 'node:http';
 import { readFile, existsSync } from 'node:fs';
 import { join, extname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { db } from './db.js';
 import { hashPassword, verifyPassword, signToken, verifyToken } from './auth.js';
 
@@ -88,13 +88,13 @@ function rateLimit(key, windowMs, max) {
   return true;
 }
 
-// Prune stale entries every minute
+// Prune stale entries every minute (unref'd so it never holds the process open)
 setInterval(() => {
   const now = Date.now();
   for (const [k, v] of rateLimitStore) {
     if (now > v.resetAt) rateLimitStore.delete(k);
   }
-}, 60_000);
+}, 60_000).unref();
 
 // ── Request helpers ──────────────────────────────────────────────────────────
 function parseCookies(req) {
@@ -451,9 +451,15 @@ async function dispatch(req, res) {
 }
 
 // ── Start ────────────────────────────────────────────────────────────────────
-const server = createServer(dispatch);
-server.listen(PORT, () => {
-  const mode = IS_PROD ? 'production' : 'development';
-  console.log(`🔥 Hot Sauce Passport [${mode}] → http://localhost:${PORT}`);
-  if (IS_PROD) console.log(`   Serving frontend from: ${DIST_DIR}`);
-});
+// Exported so tests can boot the server on an ephemeral port; only auto-listens
+// when this file is the entry point (node server/index.js).
+export const server = createServer(dispatch);
+
+const isMain = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+if (isMain) {
+  server.listen(PORT, () => {
+    const mode = IS_PROD ? 'production' : 'development';
+    console.log(`🔥 Hot Sauce Passport [${mode}] → http://localhost:${PORT}`);
+    if (IS_PROD) console.log(`   Serving frontend from: ${DIST_DIR}`);
+  });
+}

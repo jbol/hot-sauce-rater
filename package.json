@@ -1,7 +1,7 @@
 {
   "name": "hot-sauce-rater",
   "private": true,
-  "version": "2.0.0",
+  "version": "3.0.0",
   "type": "module",
   "packageManager": "pnpm@11.6.0",
   "scripts": {
@@ -11,6 +11,7 @@
     "dev": "node --no-warnings server/index.js & vite",
     "build": "node scripts/build.mjs",
     "build:vite": "vite build",
+    "test": "node --no-warnings --test \"tests/*.test.js\"",
     "preview": "vite preview",
     "start": "NODE_ENV=production node --no-warnings server/index.js"
   },

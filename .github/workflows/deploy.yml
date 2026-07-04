@@ -1,0 +1,52 @@
+# CD — deploys to the production VPS (masbrava.com) when a GitHub Release is
+# published (or manually via the Actions tab). Tests gate the deploy.
+#
+# The SSH identity (secret VPS_SSH_KEY) is command-restricted on the server:
+# whatever command is requested, sshd runs deploy/deploy.sh and nothing else,
+# so a leaked key can only redeploy origin/main.
+name: Release Deploy
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  test:
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    name: Deploy to masbrava.com
+    needs: test
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Set up SSH identity and pinned host key
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          cat >> ~/.ssh/known_hosts <<'HOSTKEY'
+          |1|MaVfStRko//JwosNlMdfG+hjnR8=|VPhOvDjkairc+xxY0eb8sOYqCeM= ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICsbuEnvsSuvx4B0OgqSyYwGy3F847MPLDkJUI9i4J+l
+          HOSTKEY
+
+      - name: Run deploy.sh on the VPS
+        run: |
+          ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes \
+            "root@${{ secrets.VPS_HOST }}" deploy
+
+      - name: Smoke-check the live site
+        run: |
+          sleep 3
+          curl -sf https://masbrava.com/ | grep -q "Pasaporte Picante" \
+            && echo "homepage serves the passport ✓"
+          code=$(curl -s -o /dev/null -w "%{http_code}" https://masbrava.com/api/auth/me)
+          if [ "$code" != "401" ]; then
+            echo "::error::API health check failed (expected 401 from /api/auth/me, got $code)"
+            exit 1
+          fi
+          echo "API responding correctly ✓"

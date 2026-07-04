@@ -124,6 +124,35 @@ pnpm start
 
 ---
 
+## Tests & CI/CD
+
+```bash
+pnpm test        # Node's built-in test runner — no test framework installed
+```
+
+The suite boots the **real server** against a throwaway SQLite database and
+covers auth, entries CRUD, validation bounds, the mild→inferno ordering rule,
+per-user isolation, the crypto helpers, and the one-time v2→v3 migration.
+
+Two GitHub Actions workflows:
+
+| Workflow | Trigger | What it does |
+|---|---|---|
+| `ci.yml` | every push to `main` + every PR | tests → build → fails if the committed `dist/` is stale |
+| `deploy.yml` | publishing a **GitHub Release** (or manual dispatch) | CI gate → SSH `deploy/deploy.sh` on the VPS → smoke-checks the live site |
+
+Cutting a release (which deploys to production):
+
+```bash
+gh release create v3.1.0 --generate-notes
+```
+
+The deploy key stored in `VPS_SSH_KEY` is **command-restricted** on the server
+(`command="deploy.sh",restrict` in `authorized_keys`), so even if it leaked it
+can only redeploy `origin/main` — it cannot open a shell.
+
+---
+
 ## Environment variables reference
 
 | Variable | Default | Description |
