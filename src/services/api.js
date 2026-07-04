@@ -13,10 +13,7 @@ async function request(path, options = {}) {
   const data = await res.json().catch(() => ({}));
 
   if (!res.ok) {
-    const message =
-      data.error ||
-      data.errors?.[0]?.msg ||
-      `Request failed with status ${res.status}`;
+    const message = data.error || `Request failed with status ${res.status}`;
     const err = new Error(message);
     err.status = res.status;
     err.data = data;
@@ -39,13 +36,15 @@ export const api = {
     me: () => request('/auth/me'),
   },
 
-  sauces: {
-    getUserData: () => request('/sauces/user-data'),
+  entries: {
+    list: () => request('/entries'),
 
-    rate: (sauceId, rating) =>
-      request('/sauces/rate', { method: 'POST', body: JSON.stringify({ sauceId, rating }) }),
+    create: (entry) =>
+      request('/entries', { method: 'POST', body: JSON.stringify(entry) }),
 
-    toggleFavorite: (sauceId) =>
-      request('/sauces/favorite', { method: 'POST', body: JSON.stringify({ sauceId }) }),
+    update: (id, entry) =>
+      request(`/entries/${id}`, { method: 'PUT', body: JSON.stringify(entry) }),
+
+    remove: (id) => request(`/entries/${id}`, { method: 'DELETE' }),
   },
 };

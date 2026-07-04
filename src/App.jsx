@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { SaucesProvider } from './contexts/SaucesContext';
+import { EntriesProvider } from './contexts/EntriesContext';
 import AuthPage from './components/AuthPage';
-import PassportHome from './components/PassportHome';
-import ExploreView from './components/ExploreView';
+import PassportBook from './components/PassportBook';
+import FanGauge from './components/FanGauge';
+import { ChiliIcon } from './components/Ornaments';
 
-function Nav({ view, setView }) {
+function Nav() {
   const { user, logout } = useAuth();
   const [busy, setBusy] = useState(false);
 
@@ -18,29 +19,13 @@ function Nav({ view, setView }) {
   return (
     <nav className="nav">
       <div className="nav-brand">
-        <span className="nav-flame">🔥</span>
-        <span className="nav-brand-text">Hot Sauce Passport</span>
+        <ChiliIcon size={22} color="#e9c877" stem="#9db36a" />
+        <span className="nav-brand-text">PASAPORTE PICANTE</span>
       </div>
-
-      <div className="nav-tabs">
-        <button
-          className={`nav-tab ${view === 'passport' ? 'nav-tab-active' : ''}`}
-          onClick={() => setView('passport')}
-        >
-          My Passport
-        </button>
-        <button
-          className={`nav-tab ${view === 'explore' ? 'nav-tab-active' : ''}`}
-          onClick={() => setView('explore')}
-        >
-          Explore
-        </button>
-      </div>
-
       <div className="nav-user">
         <span className="nav-name">{user?.name}</span>
         <button className="nav-logout" onClick={handleLogout} disabled={busy}>
-          {busy ? '…' : 'Sign Out'}
+          {busy ? '…' : 'Salir'}
         </button>
       </div>
     </nav>
@@ -49,13 +34,12 @@ function Nav({ view, setView }) {
 
 function AppContent() {
   const { user, loading } = useAuth();
-  const [view, setView] = useState('passport');
 
   if (loading) {
     return (
       <div className="splash">
-        <div className="splash-flame">🔥</div>
-        <div className="splash-text">Loading…</div>
+        <FanGauge heat={10} size={150} className="splash-fan" />
+        <div className="splash-text">Abriendo el pasaporte…</div>
       </div>
     );
   }
@@ -65,17 +49,17 @@ function AppContent() {
   }
 
   return (
-    <SaucesProvider>
+    <EntriesProvider>
       <div className="app-shell">
-        <Nav view={view} setView={setView} />
+        <Nav />
         <main className="app-main">
-          {view === 'passport' ? <PassportHome /> : <ExploreView />}
+          <PassportBook />
         </main>
         <footer className="app-footer">
-          🔥 Hot Sauce Passport · Republic of Spice
+          PASAPORTE PICANTE · de suave a infierno · hecho con duende
         </footer>
       </div>
-    </SaucesProvider>
+    </EntriesProvider>
   );
 }
 
