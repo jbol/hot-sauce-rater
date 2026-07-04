@@ -56,7 +56,7 @@ function AppContent() {
           <PassportBook />
         </main>
         <footer className="app-footer">
-          PASAPORTE PICANTE · de suave a infierno · hecho con duende
+          PASAPORTE PICANTE · LA MAS BRAVA · hecho con duende
         </footer>
       </div>
     </EntriesProvider>

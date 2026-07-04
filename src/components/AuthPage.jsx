@@ -62,7 +62,7 @@ export default function AuthPage() {
         <div className="auth-card">
           <AzulejoStrip height={12} />
           <div className="auth-card-body">
-            <div className="auth-office">OFICINA DE EXPEDICIÓN · passport office</div>
+            <div className="auth-office">LA MAS BRAVA · OFICINA DE EXPEDICIÓN</div>
 
             <div className="auth-tabs" role="tablist">
               <button
@@ -112,7 +112,7 @@ export default function AuthPage() {
         </div>
       </div>
 
-      <footer className="auth-foot">REINO DEL PICANTE · de suave a infierno</footer>
+      <footer className="auth-foot">LA MAS BRAVA · de suave a infierno</footer>
     </div>
   );
 }

@@ -8,7 +8,7 @@ export default function StampSeal({
   date,
   size = 140,
   rotate = -11,
-  top = 'PASAPORTE PICANTE',
+  top = 'LA MAS BRAVA',
   bottom = '★ PROBADO ★',
   className = '',
 }) {

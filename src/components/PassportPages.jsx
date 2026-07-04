@@ -54,7 +54,7 @@ export function CoverPage({ onOpen }) {
       aria-label="Abrir el pasaporte"
     >
       <div className="cover-frame">
-        <div className="cover-kicker">REINO DEL PICANTE</div>
+        <div className="cover-kicker">LA MAS BRAVA</div>
         <FanEmblem size={170} className="cover-emblem" />
         <h1 className="cover-title">PASAPORTE<br />PICANTE</h1>
         <div className="cover-sub">HOT SAUCE PASSPORT</div>
@@ -92,7 +92,7 @@ export function BackCover() {
     <div className="cover cover-back">
       <div className="cover-frame cover-frame-plain">
         <FanEmblem size={110} className="cover-emblem" />
-        <div className="cover-foot">REINO DEL PICANTE</div>
+        <div className="cover-foot">LA MAS BRAVA</div>
       </div>
     </div>
   );
@@ -105,7 +105,7 @@ export function IdPage({ user, entries }) {
   const hottest = count ? entries[count - 1] : null;
   const avg = count ? (entries.reduce((s, e) => s + e.heat, 0) / count).toFixed(1) : null;
   const rank = rankTitle(count);
-  const passportNo = `HS-${String(user.id).padStart(6, '0')}`;
+  const passportNo = `LMB-${String(user.id).padStart(6, '0')}`;
 
   return (
     <div className="page-content id-page">
@@ -150,8 +150,8 @@ export function IdPage({ user, entries }) {
       </div>
 
       <div className="mrz" aria-hidden="true">
-        <div>{mrz(`P<PICANTE<${user.name}`)}</div>
-        <div>{mrz(`${passportNo}<FUEGO<${count}SELLOS<REINO<DEL<PICANTE`)}</div>
+        <div>{mrz(`P<LAMASBRAVA<${user.name}`)}</div>
+        <div>{mrz(`${passportNo}<FUEGO<${count}SELLOS<LA<MAS<BRAVA`)}</div>
       </div>
     </div>
   );
