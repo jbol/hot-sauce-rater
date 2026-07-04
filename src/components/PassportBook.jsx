@@ -134,6 +134,28 @@ export default function PassportBook() {
     setPendingId(saved.id);
   };
 
+  // Swipe to flip on touch devices. The handlers only observe — no
+  // preventDefault — so taps, buttons, and vertical scrolling keep working.
+  // A swipe must be quick, mostly horizontal, and travel ≥48px; the time cap
+  // keeps long-press text selections from turning pages on release.
+  const touchRef = useRef(null);
+  const handleTouchStart = (e) => {
+    touchRef.current = e.touches.length === 1
+      ? { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now() }
+      : null;
+  };
+  const handleTouchEnd = (e) => {
+    const start = touchRef.current;
+    touchRef.current = null;
+    if (!start || form) return;
+    const dx = e.changedTouches[0].clientX - start.x;
+    const dy = e.changedTouches[0].clientY - start.y;
+    if (Date.now() - start.t > 600) return;
+    if (Math.abs(dx) < 48 || Math.abs(dx) < 1.5 * Math.abs(dy)) return;
+    if (dx < 0) next();
+    else prev();
+  };
+
   if (loading) {
     return (
       <div className="book-loading">
@@ -154,7 +176,7 @@ export default function PassportBook() {
         : `${flipped} / ${sheetCount}`;
 
   return (
-    <div className="book-zone">
+    <div className="book-zone" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
       {error && <div className="book-error">{error}</div>}
 
       {single ? (

@@ -77,6 +77,8 @@ graph TD
   rotateY(-180°) flips local z, which is what orders both stacks correctly.
 - Mobile ≤860px (`SINGLE_MQ`): single-page mode via `singleIdx`; mode switch maps
   position both ways. ArrowLeft/Right flip (skipped when form open / in inputs).
+- Touch: swipe left/right on `.book-zone` flips pages (observe-only handlers, no
+  preventDefault; ≥48px, mostly horizontal, <600ms so scrolls/long-presses don't flip).
 - After save, `pendingId` effect navigates to the entry's (possibly re-filed) page.
 - Heat categories (utils/heat.js): SUAVE ≤2 · TEMPLADO ≤4 · PICANTE ≤6 ·
   ARDIENTE ≤8 · INFIERNO ≤10; fan blade ramp gold→carmine (`heatColor`).
