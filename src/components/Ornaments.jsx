@@ -56,64 +56,98 @@ export function Divider({ className = '' }) {
   );
 }
 
-// The front-cover emblem: a sevillana dancer in the classic pose — one arm
-// arched overhead, bata de cola sweeping left with a ruffled hem — inside the
-// same gold ring as FanEmblem. Lunares are cut out of the skirt (evenodd)
-// so the leather shows through. All currentColor, engraved-gold on the cover.
-export function DancerEmblem({ size = 190, className = '' }) {
+// The front-cover emblem: a flamenca in the classic pose — open fan held
+// aloft, head in profile with lifted chin, the other hand pulling the
+// flounced hem up to one side, heeled shoe showing beneath. Body renders in
+// currentColor (gold on the leather); the fan and flounce take the accent
+// colour, edged in gold, echoing the black-and-red silhouette it's based on.
+export function DancerEmblem({ size = 190, className = '', accent = '#a4243b' }) {
   return (
     <svg viewBox="0 0 200 200" width={size} height={size} className={className} aria-hidden="true">
       {/* ring */}
       <circle cx="100" cy="100" r="96" fill="none" stroke="currentColor" strokeWidth="2.5" />
       <circle cx="100" cy="100" r="89" fill="none" stroke="currentColor" strokeWidth="1" strokeDasharray="1 5" strokeLinecap="round" />
       <path d="M100 8 L103 15 L100 22 L97 15 Z" fill="currentColor" />
-      <path d="M100 178 L103 185 L100 192 L97 185 Z" fill="currentColor" />
       <path d="M8 100 L15 97 L22 100 L15 103 Z" fill="currentColor" />
       <path d="M178 100 L185 97 L192 100 L185 103 Z" fill="currentColor" />
 
-      {/* head, tilted back toward the raised arm, hair in a bun */}
-      <ellipse cx="103" cy="52" rx="8.5" ry="9.5" fill="currentColor" transform="rotate(-10 103 52)" />
-      <circle cx="112" cy="45" r="5" fill="currentColor" />
-
-      {/* raised arm arching over the head, hand hovering above the crown */}
+      {/* open fan, held aloft — accent leaf edged in gold, slats + rivet */}
       <path
-        d="M107 68 C 127 62, 141 46, 131 31 C 126 24, 114 23, 105 29"
-        fill="none" stroke="currentColor" strokeWidth="6.5" strokeLinecap="round"
+        d="M74 57 L 48.9 62.7 A 26 26 0 0 1 92.4 37.6 Z"
+        fill={accent} stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"
       />
-      {/* lower arm curving down to the skirt */}
+      <g stroke="currentColor" strokeWidth="0.9" opacity="0.85">
+        <line x1="74" y1="57" x2="53.5" y2="47.5" />
+        <line x1="74" y1="57" x2="63" y2="35.5" />
+        <line x1="74" y1="57" x2="82" y2="33.5" />
+      </g>
+      <circle cx="74" cy="57" r="2.6" fill="currentColor" />
+
+      {/* raised arm to the fan */}
       <path
-        d="M93 68 C 76 76, 66 88, 71 102 C 72 105, 75 107, 78 107"
-        fill="none" stroke="currentColor" strokeWidth="6.5" strokeLinecap="round"
+        d="M92 81 C 84 76, 78 68, 75 59"
+        fill="none" stroke="currentColor" strokeWidth="5.5" strokeLinecap="round"
       />
 
-      {/* torso, arched back */}
+      {/* head in profile, chin lifted; chignon at the nape; long neck */}
+      <ellipse cx="102" cy="60" rx="7.2" ry="8.2" fill="currentColor" transform="rotate(16 102 60)" />
+      <path d="M105 52 C 111 55, 114.5 60, 113.5 64.5 L 104 69 Z" fill="currentColor" />
+      <circle cx="92.5" cy="66.5" r="4.6" fill="currentColor" />
+      <path d="M97 67 L 104 65 C 104 71, 105 75, 107 79 L 93 82 C 95.5 77, 96.8 72, 97 67 Z" fill="currentColor" />
+
+      {/* fitted torso, bust and waist */}
       <path
-        d="M90 63 C 86 78, 91 90, 94 100 L 107 100 C 111 88, 112 74, 110 63 C 104 58, 95 58, 90 63 Z"
+        d="M90 80 C 88 92, 90 102, 94 112 C 91 120, 89 126, 88 132
+           L 114 132 C 113 124, 110 116, 108 108 C 112 98, 110 86, 104 79
+           C 99 76, 93 77, 90 80 Z"
         fill="currentColor"
       />
 
-      {/* bata de cola: flares left into a train, scalloped ruffle hem;
-          lunares punched out via evenodd subpaths */}
+      {/* back arm reaching down; the hand merges into the hem gather */}
       <path
-        fillRule="evenodd"
+        d="M103 81 C 112 87, 118 96, 120 106 C 120.8 112, 121.5 118, 122 123"
+        fill="none" stroke="currentColor" strokeWidth="5.2" strokeLinecap="round"
+      />
+      <circle cx="122" cy="124" r="3.2" fill="currentColor" />
+
+      {/* standing leg + heeled shoe under the lifted side of the hem,
+          drawn first so skirt & flounce overlap the thigh */}
+      <path d="M108.5 152 L 107 169" stroke="currentColor" strokeWidth="4.2" strokeLinecap="round" fill="none" />
+      <path
+        d="M102.5 170 C 102.5 167.6, 104.9 166.4, 107.6 166.4
+           C 112 166.4, 116.4 168.5, 119.6 171.5
+           C 121.3 173.1, 121.3 174.8, 119.6 175.7
+           L 103.5 175.7 Z
+           M 103.5 175.7 L 102.8 182.6 L 107.2 182.6 L 107.6 175.7 Z"
         fill="currentColor"
-        d="M93 98
-           C 82 118, 62 134, 44 150
-           C 36 158, 30 166, 35 170
-           Q 45 177, 55 168
-           Q 64 176, 74 166
-           Q 84 174, 94 164
-           Q 104 172, 114 162
-           Q 124 168, 133 156
-           Q 143 162, 148 148
-           C 147 130, 126 112, 108 98
-           Z
-           M 71 141 a 4 4 0 1 0 8 0 a 4 4 0 1 0 -8 0
-           M 94 150 a 4 4 0 1 0 8 0 a 4 4 0 1 0 -8 0
-           M 117 136 a 4 4 0 1 0 8 0 a 4 4 0 1 0 -8 0
-           M 86 121 a 3.4 3.4 0 1 0 6.8 0 a 3.4 3.4 0 1 0 -6.8 0
-           M 108 117 a 3.4 3.4 0 1 0 6.8 0 a 3.4 3.4 0 1 0 -6.8 0
-           M 56 152 a 3.4 3.4 0 1 0 6.8 0 a 3.4 3.4 0 1 0 -6.8 0"
+      />
+
+      {/* long skirt: fitted through the hip, sweeping to the floor at left,
+          hem rising to the lifting hand at right */}
+      <path
+        d="M88 132 C 83 147, 73 161, 60 172
+           C 79 167, 94 159, 104 151
+           C 112 145, 118 138, 121 130
+           C 121.4 128, 121.7 126, 122 124
+           C 119 127, 116.5 130, 114 132 Z"
+        fill="currentColor"
+      />
+
+      {/* flounce: ruffled cascade along the lifted hem — deep under the hand,
+          tapering toward the floor at left */}
+      <path
+        d="M60 172
+           C 79 167, 94 159, 104 151
+           C 112 145, 118 138, 121 130
+           C 125 133, 129 138.5, 131 144
+           Q 129 154, 120 152
+           Q 117 161, 109 158.5
+           Q 104 169.5, 95 168
+           Q 91.5 177, 81 173
+           Q 77.5 181, 67 176
+           Q 65 181, 56.5 175.5
+           C 57.5 174, 58.6 172.6, 60 172 Z"
+        fill={accent} stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round"
       />
     </svg>
   );
