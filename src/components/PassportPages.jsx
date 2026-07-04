@@ -2,7 +2,7 @@ import { useState } from 'react';
 import FanGauge from './FanGauge';
 import StampSeal from './StampSeal';
 import StarRating from './StarRating';
-import { AzulejoStrip, ChiliIcon, Divider, FanEmblem } from './Ornaments';
+import { AzulejoStrip, ChiliIcon, Divider, DancerEmblem, FanEmblem } from './Ornaments';
 import { HEAT_LEVELS, heatCategory, formatDate, formatScoville } from '../utils/heat';
 
 // Every page of the passport, front matter to back cover. Each is rendered
@@ -55,7 +55,7 @@ export function CoverPage({ onOpen }) {
     >
       <div className="cover-frame">
         <div className="cover-kicker">REINO DEL PICANTE</div>
-        <FanEmblem size={170} className="cover-emblem" />
+        <DancerEmblem size={170} className="cover-emblem" />
         <h1 className="cover-title">PASAPORTE<br />PICANTE</h1>
         <div className="cover-sub">HOT SAUCE PASSPORT</div>
         <div className="cover-foot">· DE SUAVE A INFIERNO ·</div>

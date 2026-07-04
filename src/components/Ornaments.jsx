@@ -56,6 +56,69 @@ export function Divider({ className = '' }) {
   );
 }
 
+// The front-cover emblem: a sevillana dancer in the classic pose — one arm
+// arched overhead, bata de cola sweeping left with a ruffled hem — inside the
+// same gold ring as FanEmblem. Lunares are cut out of the skirt (evenodd)
+// so the leather shows through. All currentColor, engraved-gold on the cover.
+export function DancerEmblem({ size = 190, className = '' }) {
+  return (
+    <svg viewBox="0 0 200 200" width={size} height={size} className={className} aria-hidden="true">
+      {/* ring */}
+      <circle cx="100" cy="100" r="96" fill="none" stroke="currentColor" strokeWidth="2.5" />
+      <circle cx="100" cy="100" r="89" fill="none" stroke="currentColor" strokeWidth="1" strokeDasharray="1 5" strokeLinecap="round" />
+      <path d="M100 8 L103 15 L100 22 L97 15 Z" fill="currentColor" />
+      <path d="M100 178 L103 185 L100 192 L97 185 Z" fill="currentColor" />
+      <path d="M8 100 L15 97 L22 100 L15 103 Z" fill="currentColor" />
+      <path d="M178 100 L185 97 L192 100 L185 103 Z" fill="currentColor" />
+
+      {/* head, tilted back toward the raised arm, hair in a bun */}
+      <ellipse cx="103" cy="52" rx="8.5" ry="9.5" fill="currentColor" transform="rotate(-10 103 52)" />
+      <circle cx="112" cy="45" r="5" fill="currentColor" />
+
+      {/* raised arm arching over the head, hand hovering above the crown */}
+      <path
+        d="M107 68 C 127 62, 141 46, 131 31 C 126 24, 114 23, 105 29"
+        fill="none" stroke="currentColor" strokeWidth="6.5" strokeLinecap="round"
+      />
+      {/* lower arm curving down to the skirt */}
+      <path
+        d="M93 68 C 76 76, 66 88, 71 102 C 72 105, 75 107, 78 107"
+        fill="none" stroke="currentColor" strokeWidth="6.5" strokeLinecap="round"
+      />
+
+      {/* torso, arched back */}
+      <path
+        d="M90 63 C 86 78, 91 90, 94 100 L 107 100 C 111 88, 112 74, 110 63 C 104 58, 95 58, 90 63 Z"
+        fill="currentColor"
+      />
+
+      {/* bata de cola: flares left into a train, scalloped ruffle hem;
+          lunares punched out via evenodd subpaths */}
+      <path
+        fillRule="evenodd"
+        fill="currentColor"
+        d="M93 98
+           C 82 118, 62 134, 44 150
+           C 36 158, 30 166, 35 170
+           Q 45 177, 55 168
+           Q 64 176, 74 166
+           Q 84 174, 94 164
+           Q 104 172, 114 162
+           Q 124 168, 133 156
+           Q 143 162, 148 148
+           C 147 130, 126 112, 108 98
+           Z
+           M 71 141 a 4 4 0 1 0 8 0 a 4 4 0 1 0 -8 0
+           M 94 150 a 4 4 0 1 0 8 0 a 4 4 0 1 0 -8 0
+           M 117 136 a 4 4 0 1 0 8 0 a 4 4 0 1 0 -8 0
+           M 86 121 a 3.4 3.4 0 1 0 6.8 0 a 3.4 3.4 0 1 0 -6.8 0
+           M 108 117 a 3.4 3.4 0 1 0 6.8 0 a 3.4 3.4 0 1 0 -6.8 0
+           M 56 152 a 3.4 3.4 0 1 0 6.8 0 a 3.4 3.4 0 1 0 -6.8 0"
+      />
+    </svg>
+  );
+}
+
 // The gold cover emblem: ringed fan with a chili beneath.
 export function FanEmblem({ size = 190, className = '' }) {
   return (
