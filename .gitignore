@@ -36,8 +36,9 @@ yarn.lock
 # Testing
 coverage/
 
-# Database — auto-created at runtime, do not commit (SQLite)
-data/
+# Database — auto-created at runtime, do not commit (SQLite).
+# Anchored to the repo root: src/data/ (the quick-add catalogue) IS committed.
+/data/
 *.db
 *.db-journal
 *.db-shm

@@ -36,6 +36,7 @@ graph TD
     APP --> PB[components/PassportBook<br/>flip engine · page math · modal state]
     PB --> PP[components/PassportPages<br/>Cover/Linings/Id/Intro/Sauce/Add/Blank]
     PB --> EF[components/EntryForm]
+    EF --> CAT[data/catalogue.js<br/>50+ sauces · searchCatalogue]
     AC & EC --> API[services/api.js] -->|fetch /api, cookies| IDX
     PP & EF & AP --> FG[components/FanGauge]
     PP --> SS[components/StampSeal]
@@ -99,7 +100,9 @@ SQLite file at `data/` — back up before redeploys.
 
 - Editing `src/` → `pnpm build` + commit `dist/` or the deploy ships stale UI.
 - New API routes: add to `ROUTES`; remember CORS methods header lists allowed verbs.
-- `useLocalStorage`, Express routes, static catalogue = removed in v3; don't reintroduce.
+- `useLocalStorage`, Express routes = removed in v3; don't reintroduce. v2's
+  *ratable* catalogue is gone for good — `src/data/catalogue.js` is quick-add
+  autocomplete data ONLY (prefills EntryForm; entries stay user-owned rows).
 - Google Fonts come from CDN (index.html); offline dev falls back to system serif.
 - Tests: `pnpm test` → Node's built-in runner (zero deps) over `tests/*.test.js`.
   Each file = own process + throwaway SQLite (helpers.js sets `DB_PATH` before

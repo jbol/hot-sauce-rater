@@ -3,6 +3,7 @@ import FanGauge from './FanGauge';
 import StarRating from './StarRating';
 import { AzulejoStrip } from './Ornaments';
 import { heatCategory, todayIso } from '../utils/heat';
+import { searchCatalogue } from '../data/catalogue';
 
 // "Formulario de registro" — the modal used both to stamp a new sauce and to
 // amend an existing page. Heat is picked on the fan itself (or the 1–10 ticks).
@@ -35,7 +36,55 @@ export default function EntryForm({ initial, onSave, onClose }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
 
+  // Quick-add combobox over the built-in catalogue (50+ known sauces).
+  const [suggestions, setSuggestions] = useState([]);
+  const [comboOpen, setComboOpen] = useState(false);
+  const [highlighted, setHighlighted] = useState(-1);
+
   const set = (key, value) => setForm((f) => ({ ...f, [key]: value }));
+
+  const onNameChange = (e) => {
+    const value = e.target.value;
+    set('name', value);
+    const results = searchCatalogue(value);
+    setSuggestions(results);
+    setComboOpen(results.length > 0);
+    setHighlighted(-1);
+  };
+
+  // Prefills every catalogue field, including the *suggested* heat — the fan
+  // stays interactive so the user's own ranking always wins.
+  const pickSauce = (sauce) => {
+    setForm((f) => ({
+      ...f,
+      name: sauce.name,
+      brand: sauce.brand,
+      origin: sauce.origin,
+      peppers: sauce.peppers,
+      heat: sauce.heat,
+      scoville: sauce.scoville,
+    }));
+    setComboOpen(false);
+    setSuggestions([]);
+    setHighlighted(-1);
+  };
+
+  const onNameKeyDown = (e) => {
+    if (!comboOpen || suggestions.length === 0) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setHighlighted((h) => (h + 1) % suggestions.length);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setHighlighted((h) => (h <= 0 ? suggestions.length - 1 : h - 1));
+    } else if (e.key === 'Enter' && highlighted >= 0) {
+      e.preventDefault();
+      pickSauce(suggestions[highlighted]);
+    } else if (e.key === 'Escape') {
+      e.stopPropagation(); // close only the dropdown, not the whole modal
+      setComboOpen(false);
+    }
+  };
 
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose();
@@ -92,15 +141,41 @@ export default function EntryForm({ initial, onSave, onClose }) {
 
         <form onSubmit={handleSubmit} className="entry-form">
           <div className="form-grid">
-            <Field label="NOMBRE DE LA SALSA" sub="Sauce name *">
-              <input
-                value={form.name}
-                onChange={(e) => set('name', e.target.value)}
-                maxLength={120}
-                autoFocus
-                placeholder="Salsa Brava"
-              />
-            </Field>
+            <div className="ffield">
+              <span className="ffield-label">NOMBRE DE LA SALSA <i>Sauce name *</i></span>
+              <div className="combo">
+                <input
+                  value={form.name}
+                  onChange={onNameChange}
+                  onKeyDown={onNameKeyDown}
+                  onBlur={() => setComboOpen(false)}
+                  maxLength={120}
+                  autoFocus
+                  placeholder="Busca 50+ salsas o escribe la tuya…"
+                  role="combobox"
+                  aria-expanded={comboOpen}
+                  aria-autocomplete="list"
+                />
+                {comboOpen && (
+                  <ul className="combo-list" role="listbox" aria-label="Salsas del catálogo">
+                    {suggestions.map((sauce, i) => (
+                      <li
+                        key={sauce.name}
+                        role="option"
+                        aria-selected={i === highlighted}
+                        className={`combo-item ${i === highlighted ? 'combo-item-active' : ''}`}
+                        onMouseDown={(e) => { e.preventDefault(); pickSauce(sauce); }}
+                        onMouseEnter={() => setHighlighted(i)}
+                      >
+                        <span className="combo-name">{sauce.name}</span>
+                        <span className="combo-meta">{sauce.brand} · {sauce.origin}</span>
+                        <span className="combo-heat">{sauce.heat}/10</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
             <Field label="MARCA" sub="Brand">
               <input value={form.brand} onChange={(e) => set('brand', e.target.value)} maxLength={120} placeholder="La Casa del Fuego" />
             </Field>
