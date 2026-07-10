@@ -24,11 +24,11 @@ function rankTitle(count) {
   return { es: 'Novato del Fuego', en: 'Fire Novice' };
 }
 
-function PField({ label, sub, value, wide = false }) {
+function PField({ label, sub, value, wide = false, n = null }) {
   return (
     <div className={`pfield ${wide ? 'pfield-wide' : ''}`}>
       <div className="pfield-label">
-        {label} {sub && <i>{sub}</i>}
+        {n !== null && `(${n}) `}{label} {sub && <i>{sub}</i>}
       </div>
       <div className="pfield-value">{value}</div>
     </div>
@@ -114,9 +114,19 @@ export function IdPage({ user, entries }) {
   return (
     <div className="page-content id-page">
       <AzulejoStrip height={14} />
-      <div className="page-heading">
-        <div className="page-heading-title">PASAPORTE <i>· Passport</i></div>
-        <div className="page-heading-no">{passportNo}</div>
+      <GuillochePattern stroke="#8e1f2c" opacity={0.055} />
+
+      {/* country/document band, like the data page's header */}
+      <header className="id-band">
+        <span className="id-band-country">LA MAS BRAVA</span>
+        <span className="id-band-doc">PASAPORTE <i>Passport · Passeport</i></span>
+      </header>
+
+      {/* Tipo / Código / Nº row */}
+      <div className="id-toprow">
+        <PField label="TIPO" sub="Type" value="P" />
+        <PField label="CÓDIGO" sub="Code" value="LMB" />
+        <PField label="PASAPORTE Nº" sub="Passport No" value={passportNo} />
       </div>
 
       <div className="id-body">
@@ -125,37 +135,30 @@ export function IdPage({ user, entries }) {
           <div className="id-portrait-caption">RETRATO OFICIAL</div>
         </div>
 
-        <div className="id-fields">
-          <PField label="NOMBRE" sub="Name" value={user.name} />
-          <PField label="TITULAR DESDE" sub="Member since" value={formatDate(user.created_at)} />
-          <PField label="RANGO" sub="Rank" value={`${rank.es}`} />
-          <PField label="SELLOS" sub="Stamps collected" value={count} />
+        <div className="id-grid">
+          <PField n={1} label="NOMBRE" sub="Name · Nom" value={user.name} wide />
+          <PField n={2} label="RANGO" sub="Rank · Rang" value={rank.es} />
+          <PField n={3} label="TITULAR DESDE" sub="Member since" value={formatDate(user.created_at)} />
+          <PField n={4} label="SELLOS" sub="Stamps" value={count} />
+          <PField n={5} label="FUEGO MEDIO" sub="Avg" value={avg ?? '—'} />
+          <PField n={6} label="MÁXIMA CONQUISTA" sub="Hottest conquered" value={hottest ? hottest.name : '—'} wide />
         </div>
       </div>
 
-      <div className="id-stats">
-        <div className="id-stat">
-          <div className="id-stat-num">{count}</div>
-          <div className="id-stat-label">SALSAS<br /><i>sauces</i></div>
-        </div>
-        <div className="id-stat">
-          <div className="id-stat-num">{avg ?? '—'}</div>
-          <div className="id-stat-label">FUEGO MEDIO<br /><i>avg heat</i></div>
-        </div>
-        <div className="id-stat id-stat-wide">
-          <div className="id-stat-num id-stat-text">{hottest ? hottest.name : '—'}</div>
-          <div className="id-stat-label">MÁXIMA CONQUISTA<br /><i>hottest conquered</i></div>
+      <div className="id-bottomrow">
+        <PField n={7} label="AUTORIDAD" sub="Authority · Autorité" value="LA MAS BRAVA" />
+        <div className="pfield">
+          <div className="pfield-label">(8) FIRMA DEL TITULAR <i>Signature</i></div>
+          <div className="id-signature-name">{user.name}</div>
         </div>
       </div>
 
-      <div className="id-signature">
-        <span className="id-signature-name">{user.name}</span>
-        <span className="id-signature-label">FIRMA DEL TITULAR · Signature</span>
-      </div>
+      {/* watermark emblem in the open field, like a held-to-light security mark */}
+      <FanGauge heat={10} palette="gold" size={200} showGuards={false} className="id-watermark" />
 
       <div className="mrz" aria-hidden="true">
-        <div>{mrz(`P<LAMASBRAVA<${user.name}`)}</div>
-        <div>{mrz(`${passportNo}<FUEGO<${count}SELLOS<LA<MAS<BRAVA`)}</div>
+        <div>{mrz(`P<LMB${user.name}`)}</div>
+        <div>{mrz(`${passportNo.replace('-', '')}7LMB<SELLOS<${count}<FUEGO<${avg ?? 0}`)}</div>
       </div>
     </div>
   );

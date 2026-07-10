@@ -58,14 +58,14 @@ export function Divider({ className = '' }) {
 
 // Security-print lattice for the passport linings: interlaced sine "braids"
 // tiled like engraved guilloché work, in fine gold lines on the carmine.
-export function GuillochePattern({ className = '' }) {
+export function GuillochePattern({ className = '', stroke = '#e9c877', opacity = 0.3 }) {
   const id = useId().replace(/[^a-zA-Z0-9]/g, '');
   const braid = 'M0 0 C 16 -18, 48 18, 64 0 M0 0 C 16 18, 48 -18, 64 0';
   return (
     <svg className={`guilloche ${className}`} aria-hidden="true">
       <defs>
         <pattern id={`gu${id}`} patternUnits="userSpaceOnUse" width="64" height="24">
-          <g fill="none" stroke="#e9c877" strokeWidth="0.7" opacity="0.30">
+          <g fill="none" stroke={stroke} strokeWidth="0.7" opacity={opacity}>
             {/* braid rows at the tile's top and bottom edges (tiling joins them) */}
             <path d={braid} />
             <path d={braid} transform="translate(0 24)" />
