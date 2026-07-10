@@ -3,9 +3,10 @@
 A flamenco-inspired passport for every hot sauce you've tried. Each sauce you
 record becomes a stamped **"visa de fuego"** page, and the passport's pages are
 ordered **least → most spicy** (your own 1–10 fire ranking; Scoville breaks
-ties). The design borrows from Andalusia: a carmine leather cover, lunares
-(polka-dot) linings, azulejo tile borders, a folding-fan heat gauge that opens
-with the fire, and a circular "PROBADO" rubber stamp on every page.
+ties). The design borrows from Andalusia: a carmine leather cover, guilloché
+security-print linings with a fan watermark, azulejo tile borders, a
+folding-fan heat gauge that opens with the fire, and a circular "PROBADO"
+rubber stamp on every page.
 
 - **Passport book UI** — 3D page-flip spreads on desktop, single pages on mobile
 - **Record sauces you've tried** — name, brand, origin, peppers, fire scale

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import FanGauge from './FanGauge';
 import StampSeal from './StampSeal';
 import StarRating from './StarRating';
-import { AzulejoStrip, ChiliIcon, Divider, FanEmblem } from './Ornaments';
+import { AzulejoStrip, ChiliIcon, Divider, FanEmblem, GuillochePattern } from './Ornaments';
 import { HEAT_LEVELS, heatCategory, formatDate, formatScoville } from '../utils/heat';
 
 // Every page of the passport, front matter to back cover. Each is rendered
@@ -67,6 +67,8 @@ export function CoverPage({ onOpen }) {
 export function InsideCover({ userName }) {
   return (
     <div className="lining">
+      <GuillochePattern />
+      <FanGauge heat={10} palette="gold" size={216} showGuards={false} className="lining-watermark" />
       <div className="lining-plaque">
         <div className="lining-plaque-text">Este pasaporte pertenece a</div>
         <div className="lining-plaque-sub">This passport belongs to</div>
@@ -79,6 +81,8 @@ export function InsideCover({ userName }) {
 export function BackLining() {
   return (
     <div className="lining">
+      <GuillochePattern />
+      <FanGauge heat={10} palette="gold" size={170} showGuards={false} className="lining-watermark" />
       <div className="lining-plaque lining-plaque-small">
         <div className="lining-plaque-text">hecho con duende</div>
         <div className="lining-plaque-sub">made with duende</div>

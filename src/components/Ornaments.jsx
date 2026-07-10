@@ -56,6 +56,30 @@ export function Divider({ className = '' }) {
   );
 }
 
+// Security-print lattice for the passport linings: interlaced sine "braids"
+// tiled like engraved guilloché work, in fine gold lines on the carmine.
+export function GuillochePattern({ className = '' }) {
+  const id = useId().replace(/[^a-zA-Z0-9]/g, '');
+  const braid = 'M0 0 C 16 -18, 48 18, 64 0 M0 0 C 16 18, 48 -18, 64 0';
+  return (
+    <svg className={`guilloche ${className}`} aria-hidden="true">
+      <defs>
+        <pattern id={`gu${id}`} patternUnits="userSpaceOnUse" width="64" height="24">
+          <g fill="none" stroke="#e9c877" strokeWidth="0.7" opacity="0.30">
+            {/* braid rows at the tile's top and bottom edges (tiling joins them) */}
+            <path d={braid} />
+            <path d={braid} transform="translate(0 24)" />
+            {/* half-offset middle row — two clipped segments cover the seam */}
+            <path d={braid} transform="translate(-32 12)" />
+            <path d={braid} transform="translate(32 12)" />
+          </g>
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill={`url(#gu${id})`} />
+    </svg>
+  );
+}
+
 // The gold cover emblem: ringed fan with a chili beneath.
 export function FanEmblem({ size = 190, className = '' }) {
   return (
