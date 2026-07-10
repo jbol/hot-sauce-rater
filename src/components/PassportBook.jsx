@@ -42,16 +42,25 @@ export default function PassportBook() {
   const { entries, loading, error, addEntry, updateEntry, deleteEntry } = useEntries();
 
   const [flipped, setFlipped] = useState(0);        // sheets turned (desktop spread mode)
+  const [prevFlipped, setPrevFlipped] = useState(0); // where the last turn started (riffle stagger)
+  const [turnInfo, setTurnInfo] = useState(null);   // { index, dir } of a single-sheet turn
   const [singleIdx, setSingleIdx] = useState(0);    // current page (mobile single mode)
   const [single, setSingle] = useState(() => window.matchMedia(SINGLE_MQ).matches);
   const [form, setForm] = useState(null);           // null | { entry: object | null }
   const [pendingId, setPendingId] = useState(null); // entry to navigate to once saved
+  const singleDirRef = useRef('fwd');               // last navigation direction (single mode)
 
   useEffect(() => {
     const mq = window.matchMedia(SINGLE_MQ);
-    const onChange = (e) => setSingle(e.matches);
+    // Recheck on window resize too: some embedded/emulated viewports update
+    // media evaluation without ever emitting matchMedia 'change' events.
+    const onChange = () => setSingle(mq.matches);
     mq.addEventListener('change', onChange);
-    return () => mq.removeEventListener('change', onChange);
+    window.addEventListener('resize', onChange);
+    return () => {
+      mq.removeEventListener('change', onChange);
+      window.removeEventListener('resize', onChange);
+    };
   }, []);
 
   const openForm = (entry = null) => setForm({ entry });
@@ -69,22 +78,44 @@ export default function PassportBook() {
   for (let i = 0; i < pages.length; i += 2) sheets.push([pages[i], pages[i + 1]]);
 
   const turnTo = (target) => {
-    setFlipped(Math.max(0, Math.min(sheetCount, target)));
+    const t = Math.max(0, Math.min(sheetCount, target));
+    if (t === flipped) return;
+    setPrevFlipped(flipped);
+    // Single-step turns get the fancy lift+shade keyframes on the moving
+    // sheet; multi-sheet jumps riffle via staggered transitions instead.
+    setTurnInfo(
+      Math.abs(t - flipped) === 1
+        ? { index: Math.min(t, flipped), dir: t > flipped ? 'fwd' : 'back' }
+        : null,
+    );
+    setFlipped(t);
   };
 
   const goToPageIdx = (idx) => {
     const i = Math.max(0, Math.min(pages.length - 1, idx));
-    if (single) setSingleIdx(i);
-    else turnTo(Math.ceil(i / 2));
+    if (single) {
+      singleDirRef.current = i >= singleIdx ? 'fwd' : 'back';
+      setSingleIdx(i);
+    } else {
+      turnTo(Math.ceil(i / 2));
+    }
   };
 
   function next() {
-    if (single) setSingleIdx((i) => Math.min(pages.length - 1, i + 1));
-    else turnTo(flipped + 1);
+    if (single) {
+      singleDirRef.current = 'fwd';
+      setSingleIdx((i) => Math.min(pages.length - 1, i + 1));
+    } else {
+      turnTo(flipped + 1);
+    }
   }
   function prev() {
-    if (single) setSingleIdx((i) => Math.max(0, i - 1));
-    else turnTo(flipped - 1);
+    if (single) {
+      singleDirRef.current = 'back';
+      setSingleIdx((i) => Math.max(0, i - 1));
+    } else {
+      turnTo(flipped - 1);
+    }
   }
 
   // Keyboard page-turning (disabled while the form is open).
@@ -181,33 +212,45 @@ export default function PassportBook() {
 
       {single ? (
         <div className="book-single">
-          <div key={pages[singleIdx].key} className={`single-page page-${pages[singleIdx].type}`}>
+          <div
+            key={pages[singleIdx].key}
+            className={`single-page single-page-${singleDirRef.current} page-${pages[singleIdx].type}`}
+          >
             {pages[singleIdx].node}
           </div>
         </div>
       ) : (
         <div className={`book ${flipped === 0 ? 'book-closed' : ''} ${flipped === sheetCount ? 'book-ended' : ''}`}>
           <div className="book-block">
-            {sheets.map(([front, back], i) => (
+            {sheets.map(([front, back], i) => {
               // Sheets get real 3D depth (translateZ per index) rather than
               // z-index: inside preserve-3d, coplanar siblings don't respect
               // z-index, so depth is what keeps the correct page on top of
               // each half of the open book.
-              <div
-                key={front.key}
-                className={`sheet ${i < flipped ? 'sheet-flipped' : ''}`}
-                style={{ '--depth': `${-i * 1.5}px` }}
-              >
-                <div className={`face face-front page-${front.type}`}>
-                  {front.node}
-                  <span className="page-gutter page-gutter-left" aria-hidden="true" />
+              const turning = turnInfo?.index === i ? ` sheet-turn-${turnInfo.dir}` : '';
+              // Multi-sheet jumps riffle: each moving sheet starts a beat
+              // after the previous one, in the direction of travel.
+              const lo = Math.min(prevFlipped, flipped);
+              const hi = Math.max(prevFlipped, flipped);
+              const riffling = hi - lo > 1 && i >= lo && i < hi;
+              const delayMs = riffling ? (flipped > prevFlipped ? i - lo : hi - 1 - i) * 70 : 0;
+              return (
+                <div
+                  key={front.key}
+                  className={`sheet ${i < flipped ? 'sheet-flipped' : ''}${turning}`}
+                  style={{ '--depth': `${-i * 1.5}px`, transitionDelay: `${delayMs}ms` }}
+                >
+                  <div className={`face face-front page-${front.type}`}>
+                    {front.node}
+                    <span className="page-gutter page-gutter-left" aria-hidden="true" />
+                  </div>
+                  <div className={`face face-back page-${back.type}`}>
+                    {back.node}
+                    <span className="page-gutter page-gutter-right" aria-hidden="true" />
+                  </div>
                 </div>
-                <div className={`face face-back page-${back.type}`}>
-                  {back.node}
-                  <span className="page-gutter page-gutter-right" aria-hidden="true" />
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

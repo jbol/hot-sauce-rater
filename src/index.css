@@ -228,7 +228,7 @@ input, textarea, select { font: inherit; color: inherit; }
   height: 100%;
   transform-origin: left center;
   transform-style: preserve-3d;
-  transition: transform 0.9s cubic-bezier(0.35, 0.1, 0.22, 1);
+  transition: transform 0.85s cubic-bezier(0.4, 0.05, 0.2, 1);
   /* Depth stacking (set per-sheet via --depth): rotateY flips the local z
      axis, so the same offset puts unflipped sheets in order on the right
      stack and flipped sheets in order on the left stack. */
@@ -236,6 +236,22 @@ input, textarea, select { font: inherit; color: inherit; }
 }
 
 .sheet-flipped { transform: rotateY(-180deg) translateZ(var(--depth, 0px)); }
+
+/* Single-step turns ride these keyframes instead of the plain transition:
+   the sheet lifts toward the reader through the middle of the turn (the
+   outer translateZ is in book space, the inner one keeps depth stacking). */
+@keyframes sheetTurnFwd {
+  0%   { transform: translateZ(0px)  rotateY(0deg)    translateZ(var(--depth, 0px)); }
+  50%  { transform: translateZ(36px) rotateY(-90deg)  translateZ(var(--depth, 0px)); }
+  100% { transform: translateZ(0px)  rotateY(-180deg) translateZ(var(--depth, 0px)); }
+}
+@keyframes sheetTurnBack {
+  0%   { transform: translateZ(0px)  rotateY(-180deg) translateZ(var(--depth, 0px)); }
+  50%  { transform: translateZ(36px) rotateY(-90deg)  translateZ(var(--depth, 0px)); }
+  100% { transform: translateZ(0px)  rotateY(0deg)    translateZ(var(--depth, 0px)); }
+}
+.sheet-turn-fwd  { animation: sheetTurnFwd  0.85s cubic-bezier(0.4, 0.05, 0.2, 1); }
+.sheet-turn-back { animation: sheetTurnBack 0.85s cubic-bezier(0.4, 0.05, 0.2, 1); }
 
 .face {
   position: absolute;
@@ -251,6 +267,34 @@ input, textarea, select { font: inherit; color: inherit; }
   transform: rotateY(180deg);
   border-radius: 14px 3px 3px 14px;
 }
+
+/* dynamic lighting: the departing face dims as it rotates away, the arriving
+   face starts in shadow and brightens as the sheet lands */
+.face::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, rgba(26, 9, 7, 0.5), rgba(26, 9, 7, 0.75));
+  opacity: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
+@keyframes shadeAway {
+  0%   { opacity: 0; }
+  45%  { opacity: 0.5; }
+  100% { opacity: 0.55; }
+}
+@keyframes shadeIn {
+  0%   { opacity: 0.55; }
+  55%  { opacity: 0.45; }
+  100% { opacity: 0; }
+}
+
+.sheet-turn-fwd  .face-front::after { animation: shadeAway 0.85s cubic-bezier(0.4, 0.05, 0.2, 1); }
+.sheet-turn-fwd  .face-back::after  { animation: shadeIn   0.85s cubic-bezier(0.4, 0.05, 0.2, 1); }
+.sheet-turn-back .face-back::after  { animation: shadeAway 0.85s cubic-bezier(0.4, 0.05, 0.2, 1); }
+.sheet-turn-back .face-front::after { animation: shadeIn   0.85s cubic-bezier(0.4, 0.05, 0.2, 1); }
 
 /* spine shading */
 .page-gutter {
@@ -273,11 +317,24 @@ input, textarea, select { font: inherit; color: inherit; }
   overflow: hidden;
   position: relative;
   box-shadow: 0 20px 44px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(60, 34, 16, 0.3);
-  animation: pageIn 0.35s ease;
 }
 
-@keyframes pageIn {
-  from { opacity: 0; transform: translateX(26px); }
+/* direction-aware mini page-turn */
+.single-page-fwd {
+  transform-origin: left center;
+  animation: pageInFwd 0.4s cubic-bezier(0.3, 0.1, 0.25, 1);
+}
+.single-page-back {
+  transform-origin: right center;
+  animation: pageInBack 0.4s cubic-bezier(0.3, 0.1, 0.25, 1);
+}
+
+@keyframes pageInFwd {
+  from { opacity: 0; transform: perspective(1400px) rotateY(-18deg) translateX(30px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes pageInBack {
+  from { opacity: 0; transform: perspective(1400px) rotateY(18deg) translateX(-30px); }
   to   { opacity: 1; transform: none; }
 }
 
@@ -1523,5 +1580,7 @@ input, textarea, select { font: inherit; color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   .sheet, .book, .fab, .nav-arrow { transition: none; }
   .single-page, .modal, .modal-backdrop { animation: none; }
+  .sheet-turn-fwd, .sheet-turn-back { animation: none; }
+  .sheet-turn-fwd .face::after, .sheet-turn-back .face::after { animation: none; }
   .splash-fan, .book-loading-fan { animation: none; }
 }
