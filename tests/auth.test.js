@@ -41,8 +41,11 @@ test('expired tokens are rejected', () => {
 test('tampered tokens are rejected', () => {
   const token = signToken({ userId: 1 });
 
-  // flip a character in the signature
-  const flipped = token.slice(0, -1) + (token.at(-1) === 'A' ? 'B' : 'A');
+  // Flip a character in the MIDDLE of the signature. (Not the last one: the
+  // final base64url char of a 32-byte MAC carries only 4 meaningful bits, so
+  // e.g. 'A'→'B' can decode to identical bytes and correctly verify.)
+  const i = token.length - 10;
+  const flipped = token.slice(0, i) + (token[i] === 'A' ? 'B' : 'A') + token.slice(i + 1);
   assert.throws(() => verifyToken(flipped));
 
   // swap in a forged payload with a valid structure
