@@ -53,11 +53,14 @@ graph TD
 
 - `entries` (one row = one passport page): `name*`, `brand`, `origin`, `peppers`,
   `heat*` 1–10, `rating` 1–5|null, `scoville` int|null, `notes`, `tried_on`
-  (YYYY-MM-DD), `source_sauce_id` (v2 migration link), FK user_id.
+  (YYYY-MM-DD), `source_sauce_id` (v2 migration link), `favorite` 0/1 (max 3
+  per user, enforced only in toggleFavoriteHandler; PUT/POST never touch it),
+  FK user_id. Column added via guarded ALTER in db.js (PRAGMA table_info).
 - **Canonical order (the product):** `heat ASC, COALESCE(scoville,-1) ASC, name NOCASE ASC`
   — enforced in SQL (listEntriesHandler) *and* client (`byHeat` in utils/heat.js). Keep in sync.
 - API (cookie-auth `token`, HttpOnly): `POST /api/auth/{register,login,logout}`,
-  `GET /api/auth/me`, `GET|POST /api/entries`, `PUT|DELETE /api/entries/:id`.
+  `GET /api/auth/me`, `GET|POST /api/entries`, `PUT|DELETE /api/entries/:id`,
+  `POST /api/entries/:id/favorite` (toggle; 409 past MAX_FAVORITES=3).
   ROUTES entries are exact strings **or RegExps**; capture groups → handler `params`.
 - Server JSON is camelCase (`triedOn`); DB is snake_case — mapped in `entryToJson`.
 - Validation bounds (`parseEntryBody`): name ≤120 (required), brand/origin/peppers ≤120,

@@ -144,6 +144,31 @@ test("users cannot see or touch each other's entries", async () => {
   assert.equal(intact.name, aliceEntry.name);
 });
 
+test('favourites: three roses max, toggle round trip, per-user isolation', async () => {
+  const list = (await alice.get('/api/entries')).json.entries;
+  const [a, b, c, d] = list;
+
+  for (const e of [a, b, c]) {
+    const r = await alice.post(`/api/entries/${e.id}/favorite`);
+    assert.equal(r.status, 200);
+    assert.equal(r.json.entry.favorite, true);
+  }
+
+  const fourth = await alice.post(`/api/entries/${d.id}/favorite`);
+  assert.equal(fourth.status, 409, 'a fourth rose is refused');
+
+  const favs = (await alice.get('/api/entries')).json.entries.filter((e) => e.favorite);
+  assert.equal(favs.length, 3, 'exactly three favourites persisted');
+
+  // unmarking one makes room for the fourth
+  const off = await alice.post(`/api/entries/${a.id}/favorite`);
+  assert.equal(off.json.entry.favorite, false);
+  assert.equal((await alice.post(`/api/entries/${d.id}/favorite`)).status, 200);
+
+  // bob cannot touch alice's roses (and doesn't learn they exist)
+  assert.equal((await bob.post(`/api/entries/${b.id}/favorite`)).status, 404);
+});
+
 test('unknown API routes 404, preflight is answered', async () => {
   assert.equal((await anon.get('/api/nope')).status, 404);
   const preflight = await fetch(`${base}/api/entries`, { method: 'OPTIONS' });

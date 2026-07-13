@@ -50,6 +50,7 @@ db.exec(`
     notes TEXT NOT NULL DEFAULT '',
     tried_on TEXT NOT NULL DEFAULT (date('now')),
     source_sauce_id INTEGER,
+    favorite INTEGER NOT NULL DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     UNIQUE(user_id, source_sauce_id)
@@ -84,6 +85,14 @@ db.exec(`
     UNIQUE(user_id, sauce_id)
   );
 `);
+
+// ── Column migration: favourites flag (added in v3.4) ───────────────────────
+// CREATE TABLE IF NOT EXISTS doesn't alter existing tables, so databases
+// created before the column exist without it.
+if (!db.prepare('PRAGMA table_info(entries)').all().some((c) => c.name === 'favorite')) {
+  db.exec("ALTER TABLE entries ADD COLUMN favorite INTEGER NOT NULL DEFAULT 0");
+  console.log('♻️  Added entries.favorite column');
+}
 
 // ── One-time migration: v2 catalogue ratings → passport entries ──────────────
 // Each old star rating referenced a sauce in the static catalogue. Turn each

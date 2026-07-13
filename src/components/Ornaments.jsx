@@ -19,6 +19,31 @@ export function ChiliIcon({ size = 20, color = 'currentColor', stem = '#6b7a3a',
   );
 }
 
+// A stylized spiral rose — the favourites marker (a flamenca wears a rose).
+export function RoseIcon({ size = 16, filled = false, className = '' }) {
+  return (
+    <svg viewBox="0 0 20 20" width={size} height={size} className={className} aria-hidden="true">
+      <circle
+        cx="10" cy="9" r="6.2"
+        fill={filled ? '#a4243b' : 'none'}
+        stroke={filled ? '#8e1f2c' : '#b08585'}
+        strokeWidth="1.3"
+      />
+      <path
+        d="M10 9 a1.4 1.4 0 0 1 1.4 1.4 a2.4 2.4 0 0 1 -3.7 1.5 a3.6 3.6 0 0 1 2 -6.2 a4.7 4.7 0 0 1 3.4 2.4"
+        fill="none"
+        stroke={filled ? '#f2d9c2' : '#b08585'}
+        strokeWidth="1.1"
+        strokeLinecap="round"
+      />
+      <path
+        d="M6 15.4 q2.2 -0.6 3.3 1.2 q-2.3 0.7 -3.3 -1.2 Z M14 15.4 q-2.2 -0.6 -3.3 1.2 q2.3 0.7 3.3 -1.2 Z"
+        fill={filled ? '#6b7a3a' : '#9aa070'}
+      />
+    </svg>
+  );
+}
+
 // A strip of Andalusian star-tile pattern, used as page headers.
 export function AzulejoStrip({ height = 16, className = '' }) {
   const id = useId().replace(/[^a-zA-Z0-9]/g, '');

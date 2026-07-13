@@ -46,5 +46,7 @@ export const api = {
       request(`/entries/${id}`, { method: 'PUT', body: JSON.stringify(entry) }),
 
     remove: (id) => request(`/entries/${id}`, { method: 'DELETE' }),
+
+    toggleFavorite: (id) => request(`/entries/${id}/favorite`, { method: 'POST' }),
   },
 };

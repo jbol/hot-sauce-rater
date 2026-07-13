@@ -269,9 +269,13 @@ function entryToJson(row) {
     scoville: row.scoville,
     notes: row.notes,
     triedOn: row.tried_on,
+    favorite: Boolean(row.favorite),
     createdAt: row.created_at,
   };
 }
+
+// A passport only has room for so many roses.
+const MAX_FAVORITES = 3;
 
 const trimmed = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 const isIsoDate = (v) => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(v));
@@ -373,6 +377,33 @@ async function updateEntryHandler(req, res, cookies, params) {
   json(res, 200, { entry: entryToJson(row) });
 }
 
+// POST /api/entries/:id/favorite — toggles; at most MAX_FAVORITES per user
+function toggleFavoriteHandler(_req, res, cookies, params) {
+  const payload = requireAuth(cookies, res);
+  if (!payload) return;
+
+  const entryId = Number(params[0]);
+  const row = db
+    .prepare('SELECT * FROM entries WHERE id = ? AND user_id = ?')
+    .get(entryId, payload.userId);
+  if (!row) return json(res, 404, { error: 'Entry not found' });
+
+  if (!row.favorite) {
+    const { n } = db
+      .prepare('SELECT COUNT(*) AS n FROM entries WHERE user_id = ? AND favorite = 1')
+      .get(payload.userId);
+    if (n >= MAX_FAVORITES) {
+      return json(res, 409, {
+        error: `Solo caben ${MAX_FAVORITES} favoritas — quita una rosa primero`,
+      });
+    }
+  }
+
+  db.prepare('UPDATE entries SET favorite = ? WHERE id = ?').run(row.favorite ? 0 : 1, entryId);
+  const updated = db.prepare('SELECT * FROM entries WHERE id = ?').get(entryId);
+  json(res, 200, { entry: entryToJson(updated) });
+}
+
 // DELETE /api/entries/:id
 function deleteEntryHandler(_req, res, cookies, params) {
   const payload = requireAuth(cookies, res);
@@ -398,6 +429,7 @@ const ROUTES = [
   ['POST',   '/api/entries',              createEntryHandler],
   ['PUT',    /^\/api\/entries\/(\d+)$/,   updateEntryHandler],
   ['DELETE', /^\/api\/entries\/(\d+)$/,   deleteEntryHandler],
+  ['POST',   /^\/api\/entries\/(\d+)\/favorite$/, toggleFavoriteHandler],
 ];
 
 // ── Main request dispatcher ──────────────────────────────────────────────────

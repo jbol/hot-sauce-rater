@@ -14,7 +14,7 @@ const SINGLE_MQ = '(max-width: 860px)';
 // 0 cover · 1 inside lining · 2 id page · 3 fire-scale page → sauces start at 4.
 const FIRST_SAUCE_PAGE = 4;
 
-function buildPages({ user, entries, onOpen, onEdit, onDelete, onAdd }) {
+function buildPages({ user, entries, onOpen, onEdit, onDelete, onAdd, onToggleFavorite }) {
   const total = entries.length;
   const interior = [
     { key: 'id', type: 'paper', node: <IdPage user={user} entries={entries} /> },
@@ -22,7 +22,16 @@ function buildPages({ user, entries, onOpen, onEdit, onDelete, onAdd }) {
     ...entries.map((entry, i) => ({
       key: `sauce-${entry.id}`,
       type: 'paper',
-      node: <SaucePage entry={entry} index={i} total={total} onEdit={onEdit} onDelete={onDelete} />,
+      node: (
+        <SaucePage
+          entry={entry}
+          index={i}
+          total={total}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onToggleFavorite={onToggleFavorite}
+        />
+      ),
     })),
     { key: 'add', type: 'paper', node: <AddPage onAdd={onAdd} isEmpty={total === 0} /> },
   ];
@@ -39,7 +48,7 @@ function buildPages({ user, entries, onOpen, onEdit, onDelete, onAdd }) {
 
 export default function PassportBook() {
   const { user } = useAuth();
-  const { entries, loading, error, addEntry, updateEntry, deleteEntry } = useEntries();
+  const { entries, loading, error, addEntry, updateEntry, deleteEntry, toggleFavorite } = useEntries();
 
   const [flipped, setFlipped] = useState(0);        // sheets turned (desktop spread mode)
   const [prevFlipped, setPrevFlipped] = useState(0); // where the last turn started (riffle stagger)
@@ -72,6 +81,7 @@ export default function PassportBook() {
     onEdit: (entry) => openForm(entry),
     onDelete: deleteEntry,
     onAdd: () => openForm(null),
+    onToggleFavorite: toggleFavorite,
   });
   const sheetCount = pages.length / 2;
   const sheets = [];

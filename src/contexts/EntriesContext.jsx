@@ -34,6 +34,13 @@ export function EntriesProvider({ children }) {
     setEntries((prev) => (prev ?? []).filter((e) => e.id !== id));
   }, []);
 
+  // Server enforces the max-3 rule; a rejected toggle throws with its message.
+  const toggleFavorite = useCallback(async (id) => {
+    const data = await api.entries.toggleFavorite(id);
+    setEntries((prev) => (prev ?? []).map((e) => (e.id === id ? data.entry : e)));
+    return data.entry;
+  }, []);
+
   // The canonical passport order: least → most spicy.
   const sorted = useMemo(() => (entries ? [...entries].sort(byHeat) : []), [entries]);
 
@@ -44,6 +51,7 @@ export function EntriesProvider({ children }) {
     addEntry,
     updateEntry,
     deleteEntry,
+    toggleFavorite,
   };
 
   return <EntriesContext.Provider value={value}>{children}</EntriesContext.Provider>;

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import FanGauge from './FanGauge';
 import StampSeal from './StampSeal';
 import StarRating from './StarRating';
-import { AzulejoStrip, ChiliIcon, Divider, FanEmblem, GuillochePattern } from './Ornaments';
+import { AzulejoStrip, ChiliIcon, Divider, FanEmblem, GuillochePattern, RoseIcon } from './Ornaments';
 import { HEAT_LEVELS, heatCategory, formatDate, formatScoville } from '../utils/heat';
 
 // Every page of the passport, front matter to back cover. Each is rendered
@@ -109,6 +109,7 @@ export function IdPage({ user, entries }) {
   const hottest = count ? entries[count - 1] : null;
   const avg = count ? (entries.reduce((s, e) => s + e.heat, 0) / count).toFixed(1) : null;
   const rank = rankTitle(count);
+  const favorites = entries.filter((e) => e.favorite);
   const passportNo = `LMB-${String(user.id).padStart(6, '0')}`;
 
   return (
@@ -168,10 +169,28 @@ export function IdPage({ user, entries }) {
         )}
       </div>
 
+      {/* three rose slots — empty ones show the max-3 rule at a glance */}
+      <div className="id-favs">
+        <div className="pfield-label">(7) FAVORITAS <i>Favourites · max 3</i></div>
+        <div className="id-favs-row">
+          {[0, 1, 2].map((i) =>
+            favorites[i] ? (
+              <div key={favorites[i].id} className="id-fav">
+                <RoseIcon size={14} filled />
+                <span className="id-fav-name">{favorites[i].name}</span>
+                <span className="id-fav-heat">{favorites[i].heat}/10</span>
+              </div>
+            ) : (
+              <div key={`libre-${i}`} className="id-fav id-fav-empty">— libre —</div>
+            ),
+          )}
+        </div>
+      </div>
+
       <div className="id-bottomrow">
-        <PField n={7} label="AUTORIDAD" sub="Authority · Autorité" value="LA MAS BRAVA" />
+        <PField n={8} label="AUTORIDAD" sub="Authority · Autorité" value="LA MAS BRAVA" />
         <div className="pfield">
-          <div className="pfield-label">(8) FIRMA DEL TITULAR <i>Signature</i></div>
+          <div className="pfield-label">(9) FIRMA DEL TITULAR <i>Signature</i></div>
           <div className="id-signature-name">{user.name}</div>
         </div>
       </div>
@@ -229,9 +248,10 @@ export function IntroPage() {
 
 // ── a sauce page (one "visa" per sauce) ───────────────────────────────────────
 
-export function SaucePage({ entry, index, total, onEdit, onDelete }) {
+export function SaucePage({ entry, index, total, onEdit, onDelete, onToggleFavorite }) {
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [favNote, setFavNote] = useState(null);
   const cat = heatCategory(entry.heat);
   const stampRotation = ((entry.id * 37) % 17) - 8;
 
@@ -242,6 +262,16 @@ export function SaucePage({ entry, index, total, onEdit, onDelete }) {
     } catch {
       setBusy(false);
       setConfirming(false);
+    }
+  };
+
+  const handleFavorite = async () => {
+    try {
+      await onToggleFavorite(entry.id);
+    } catch (err) {
+      // the server said no — full bouquet (3 roses max)
+      setFavNote(err.message);
+      setTimeout(() => setFavNote(null), 2800);
     }
   };
 
@@ -292,6 +322,15 @@ export function SaucePage({ entry, index, total, onEdit, onDelete }) {
       </div>
 
       <div className="page-actions">
+        <button
+          className={`page-action page-action-rose ${entry.favorite ? 'is-fav' : ''}`}
+          onClick={handleFavorite}
+          title={entry.favorite ? 'Quitar de favoritas' : 'Marcar como favorita (máx. 3)'}
+          aria-label={`${entry.favorite ? 'Quitar de' : 'Marcar como'} favorita: ${entry.name}`}
+          aria-pressed={entry.favorite}
+        >
+          <RoseIcon size={15} filled={entry.favorite} />
+        </button>
         <button className="page-action" onClick={() => onEdit(entry)} title="Enmendar registro · Edit" aria-label={`Editar ${entry.name}`}>
           ✎
         </button>
@@ -299,6 +338,8 @@ export function SaucePage({ entry, index, total, onEdit, onDelete }) {
           ✕
         </button>
       </div>
+
+      {favNote && <div className="fav-note" role="status">{favNote}</div>}
 
       {confirming && (
         <div className="tear-confirm">
