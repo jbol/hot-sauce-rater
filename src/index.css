@@ -727,6 +727,64 @@ input, textarea, select { font: inherit; color: inherit; }
 
 .pfield-wide { grid-column: 1 / -1; }
 
+/* featured "hottest conquered" panel */
+.id-conquest {
+  margin-top: 12px;
+  border: 1px solid var(--papel-borde);
+  border-radius: 5px;
+  background: rgba(240, 227, 196, 0.55);
+  padding: 9px 14px 8px;
+}
+
+.id-conquest-body {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 2px;
+}
+
+.id-conquest-info { min-width: 0; }
+
+.id-conquest-name {
+  font-family: var(--cuerpo);
+  font-style: italic;
+  font-weight: 600;
+  font-size: 21px;
+  line-height: 1.1;
+  color: var(--tinta-titulo);
+  overflow-wrap: anywhere;
+}
+
+.id-conquest-brand {
+  font-family: var(--mano);
+  font-size: 15px;
+  color: var(--tinta-suave);
+}
+
+.id-conquest-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 5px;
+  font-size: 13px;
+  color: var(--tinta-suave);
+}
+
+.id-conquest-heat {
+  font-family: var(--titulo);
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--rojo-oscuro);
+}
+
+.id-conquest-empty {
+  font-style: italic;
+  color: #a58a5c;
+  font-size: 15px;
+  padding: 8px 2px 4px;
+}
+
 .id-bottomrow {
   display: grid;
   grid-template-columns: 1fr 1fr;

@@ -141,8 +141,31 @@ export function IdPage({ user, entries }) {
           <PField n={3} label="TITULAR DESDE" sub="Member since" value={formatDate(user.created_at)} />
           <PField n={4} label="SELLOS" sub="Stamps" value={count} />
           <PField n={5} label="FUEGO MEDIO" sub="Avg" value={avg ?? '—'} />
-          <PField n={6} label="MÁXIMA CONQUISTA" sub="Hottest conquered" value={hottest ? hottest.name : '—'} wide />
         </div>
+      </div>
+
+      {/* the hottest sauce conquered so far — re-crowned automatically
+          whenever a hotter entry is recorded (entries arrive sorted) */}
+      <div className="id-conquest">
+        <div className="pfield-label">(6) MÁXIMA CONQUISTA <i>Hottest conquered</i></div>
+        {hottest ? (
+          <div className="id-conquest-body">
+            <FanGauge heat={hottest.heat} size={96} />
+            <div className="id-conquest-info">
+              <div className="id-conquest-name">{hottest.name}</div>
+              {hottest.brand && <div className="id-conquest-brand">por {hottest.brand}</div>}
+              <div className="id-conquest-meta">
+                <span className={`heat-chip heat-${heatCategory(hottest.heat).key}`}>
+                  {heatCategory(hottest.heat).es}
+                </span>
+                <span className="id-conquest-heat">{hottest.heat}/10</span>
+                {hottest.scoville !== null && <span>· {formatScoville(hottest.scoville)}</span>}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="id-conquest-empty">— pendiente de conquista · yet to be conquered —</div>
+        )}
       </div>
 
       <div className="id-bottomrow">
