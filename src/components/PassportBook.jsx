@@ -271,9 +271,9 @@ export default function PassportBook() {
         <button className="nav-arrow" onClick={next} disabled={atEnd} aria-label="Página siguiente">›</button>
       </div>
 
-      <button className="fab" onClick={() => openForm(null)}>
+      <button className="fab" onClick={() => openForm(null)} aria-label="Nueva salsa">
         <span className="fab-plus" aria-hidden="true">＋</span>
-        <span>Nueva salsa</span>
+        <span className="fab-label">Nueva salsa</span>
       </button>
 
       {form && <EntryForm initial={form.entry} onSave={handleSave} onClose={() => setForm(null)} />}

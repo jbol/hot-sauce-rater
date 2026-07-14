@@ -71,6 +71,7 @@ input, textarea, select { font: inherit; color: inherit; }
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  position: relative;
   background:
     radial-gradient(90% 70% at 50% 8%, #3d1521 0%, #220a10 52%, #150609 100%);
 }
@@ -1691,15 +1692,84 @@ input, textarea, select { font: inherit; color: inherit; }
   }
 }
 
+/* ── mobile: the passport IS the app ─────────────────────────────────────── */
 @media (max-width: 860px) {
-  .app-main { padding: 22px 12px 84px; align-items: flex-start; }
-  .book-nav { margin-top: 18px; }
-  .book-nav-label { min-width: 150px; font-size: 13.5px; }
-  .fab { right: 16px; bottom: 16px; padding: 11px 16px 11px 12px; }
+  /* chrome melts away: transparent floating logout, no brand bar, no footer */
+  .nav {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 30;
+    background: none;
+    border-bottom: none;
+    backdrop-filter: none;
+    padding: 10px 14px 0;
+    padding-top: max(10px, env(safe-area-inset-top));
+  }
+  .nav-brand-text { display: none; }
+  .nav-brand { opacity: 0.75; }
   .nav-name { display: none; }
+  .app-footer { display: none; }
+
+  /* the page fills the phone */
+  .app-main { padding: 44px 0 6px; }
+  .single-page {
+    width: min(100vw - 12px, calc((100dvh - 118px) * 0.71));
+  }
+
+  /* no arrow buttons — pages turn by swipe; keep a whisper of orientation */
+  .nav-arrow { display: none; }
+  .book-nav { margin-top: 9px; }
+  .book-nav-label {
+    min-width: 0;
+    font-size: 12.5px;
+    opacity: 0.75;
+  }
+
+  /* round ＋ button, clear of home-bar/notch */
+  .fab {
+    right: max(14px, env(safe-area-inset-right));
+    bottom: max(14px, env(safe-area-inset-bottom));
+    width: 52px;
+    height: 52px;
+    padding: 0;
+    justify-content: center;
+  }
+  .fab-label { display: none; }
+  .fab-plus { font-size: 20px; }
+
   .form-grid { grid-template-columns: 1fr; }
   .form-grid-3 { grid-template-columns: 1fr 1fr; }
   .fire-picker { gap: 12px; }
+
+  /* denser ID page — the data page must fit a 378px-wide passport */
+  .id-page { --pad-x: 18px; --pad-y: 12px; }
+  .id-band { padding: 5px 10px 4px; margin-bottom: 8px; }
+  .id-band-country { font-size: 13px; letter-spacing: 2px; }
+  .id-band-doc { font-size: 8px; letter-spacing: 1.4px; }
+  .id-band-doc i { font-size: 9px; }
+  .id-toprow { gap: 12px; margin-bottom: 8px; }
+  .pfield-label { font-size: 7.5px; letter-spacing: 1.2px; }
+  .pfield-label i { font-size: 8.5px; }
+  .id-page .pfield-value { font-size: 12.5px; min-height: 16px; }
+  .id-body { grid-template-columns: 64px 1fr; gap: 10px; }
+  .id-portrait svg { width: 42px; height: 42px; }
+  .id-portrait-caption { font-size: 5.5px; }
+  .id-grid { gap: 5px 10px; }
+  .id-conquest { padding: 6px 10px; margin-top: 8px; }
+  .id-conquest-body { gap: 10px; }
+  .id-conquest .fan-gauge { width: 64px; height: 47px; }
+  .id-conquest-name { font-size: 15.5px; }
+  .id-conquest-brand { font-size: 12.5px; }
+  .id-conquest-meta { margin-top: 3px; gap: 6px; font-size: 11px; }
+  .id-favs { margin-top: 8px; }
+  .id-favs-row { gap: 5px; }
+  .id-fav { padding: 3px 6px; font-size: 11px; gap: 4px; }
+  .id-fav-heat { font-size: 8.5px; }
+  .id-bottomrow { margin-top: 6px; gap: 10px; }
+  .id-signature-name { font-size: 18px; }
+  .mrz { font-size: 8.5px; letter-spacing: 1.1px; padding: 5px 3px 2px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
