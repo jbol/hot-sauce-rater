@@ -3,9 +3,25 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  HEAT_LEVELS, heatCategory, heatColor, byHeat,
+  HEAT_LEVELS, heatCategory, heatColor, byHeat, heatFromScoville,
   formatDate, formatScoville, todayIso,
 } from '../src/utils/heat.js';
+
+test('heatFromScoville maps SHU onto the 1–10 scale at the band edges', () => {
+  assert.equal(heatFromScoville(0), 1);
+  assert.equal(heatFromScoville(450), 1, "Frank's");
+  assert.equal(heatFromScoville(700), 1, 'inclusive upper edge');
+  assert.equal(heatFromScoville(701), 2);
+  assert.equal(heatFromScoville(2200), 3, 'Sriracha');
+  assert.equal(heatFromScoville(3750), 4, 'Tabasco');
+  assert.equal(heatFromScoville(5790), 5, 'El Yucateco');
+  assert.equal(heatFromScoville(12000), 6, 'Encona');
+  assert.equal(heatFromScoville(36000), 7, 'Los Calientes');
+  assert.equal(heatFromScoville(135600), 8, 'Da Bomb');
+  assert.equal(heatFromScoville(357000), 9, 'Mad Dog 357');
+  assert.equal(heatFromScoville(1000000), 10, 'The Last Dab');
+  assert.equal(heatFromScoville(16000000), 10, 'pure capsaicin still fits the scale');
+});
 
 test('heatCategory maps the 1–10 scale onto the five named levels', () => {
   assert.equal(heatCategory(1).key, 'suave');

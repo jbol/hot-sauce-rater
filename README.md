@@ -9,8 +9,11 @@ folding-fan heat gauge that opens with the fire, and a circular "PROBADO"
 rubber stamp on every page.
 
 - **Passport book UI** — 3D page-flip spreads on desktop, single pages on mobile
-- **Record sauces you've tried** — name, brand, origin, peppers, fire scale
-  (1–10), star rating, Scoville, date, tasting notes; edit or "tear out" pages
+- **Record sauces you've tried** — name, brand, origin, peppers, star rating,
+  Scoville, date, tasting notes; edit or "tear out" pages
+- **Scoville-anchored fire scale** — with a Scoville rating the 1–10 level is
+  derived from it (one canonical SHU band table, enforced server-side);
+  without one, you open the fan by feel
 - **Quick-add catalogue** — type to search 50+ well-known sauces; picking one
   prefills brand, origin, peppers, Scoville and a suggested heat (all editable)
 - **ID page** — bearer info, rank title, stats, and a machine-readable zone

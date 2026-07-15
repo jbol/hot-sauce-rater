@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import FanGauge from './FanGauge';
 import StarRating from './StarRating';
 import { AzulejoStrip } from './Ornaments';
-import { heatCategory, todayIso } from '../utils/heat';
+import { heatCategory, heatFromScoville, todayIso } from '../utils/heat';
 import { searchCatalogue } from '../data/catalogue';
 
 // "Formulario de registro" — the modal used both to stamp a new sauce and to
@@ -52,8 +52,7 @@ export default function EntryForm({ initial, onSave, onClose }) {
     setHighlighted(-1);
   };
 
-  // Prefills every catalogue field, including the *suggested* heat — the fan
-  // stays interactive so the user's own ranking always wins.
+  // Prefills every catalogue field; the level comes from its Scoville.
   const pickSauce = (sauce) => {
     setForm((f) => ({
       ...f,
@@ -61,12 +60,27 @@ export default function EntryForm({ initial, onSave, onClose }) {
       brand: sauce.brand,
       origin: sauce.origin,
       peppers: sauce.peppers,
-      heat: sauce.heat,
+      heat: heatFromScoville(sauce.scoville),
       scoville: sauce.scoville,
     }));
     setComboOpen(false);
     setSuggestions([]);
     setHighlighted(-1);
+  };
+
+  // While a Scoville is entered, the level is derived from it and the fan is
+  // read-only; clear the field to rank by feel again.
+  const scovilleNum =
+    form.scoville === '' || form.scoville === null ? null : Number(form.scoville);
+  const scovilleLock = Number.isInteger(scovilleNum) && scovilleNum >= 0;
+
+  const onScovilleChange = (e) => {
+    const value = e.target.value;
+    setForm((f) => {
+      const n = value === '' ? null : Number(value);
+      const locked = Number.isInteger(n) && n >= 0;
+      return { ...f, scoville: value, heat: locked ? heatFromScoville(n) : f.heat };
+    });
   };
 
   const onNameKeyDown = (e) => {
@@ -169,7 +183,7 @@ export default function EntryForm({ initial, onSave, onClose }) {
                       >
                         <span className="combo-name">{sauce.name}</span>
                         <span className="combo-meta">{sauce.brand} · {sauce.origin}</span>
-                        <span className="combo-heat">{sauce.heat}/10</span>
+                        <span className="combo-heat">{heatFromScoville(sauce.scoville)}/10</span>
                       </li>
                     ))}
                   </ul>
@@ -193,8 +207,8 @@ export default function EntryForm({ initial, onSave, onClose }) {
               <FanGauge
                 heat={shownHeat}
                 size={216}
-                onSelect={(h) => set('heat', h)}
-                onPreview={setPreview}
+                onSelect={scovilleLock ? undefined : (h) => set('heat', h)}
+                onPreview={scovilleLock ? undefined : setPreview}
                 ariaLabel="Selector de fuego"
               />
               <div className="fire-readout">
@@ -210,28 +224,34 @@ export default function EntryForm({ initial, onSave, onClose }) {
                   type="button"
                   role="radio"
                   aria-checked={form.heat === n}
+                  disabled={scovilleLock}
                   className={`fire-tick ${form.heat >= n ? 'fire-tick-on' : ''}`}
                   onClick={() => set('heat', n)}
-                  onMouseEnter={() => setPreview(n)}
-                  onMouseLeave={() => setPreview(null)}
+                  onMouseEnter={scovilleLock ? undefined : () => setPreview(n)}
+                  onMouseLeave={scovilleLock ? undefined : () => setPreview(null)}
                 >
                   {n}
                 </button>
               ))}
             </div>
+            {scovilleLock && (
+              <p className="fire-locked-note">
+                Nivel fijado por el Scoville <i>· level set by the Scoville rating</i>
+              </p>
+            )}
           </div>
 
           <div className="form-grid form-grid-3">
             <Field label="PUNTUACIÓN" sub="Rating">
               <StarRating value={form.rating ?? 0} onChange={(r) => set('rating', r)} size={22} />
             </Field>
-            <Field label="SCOVILLE" sub="SHU, optional">
+            <Field label="SCOVILLE" sub="SHU — fija el nivel">
               <input
                 type="number"
                 min="0"
                 step="1"
                 value={form.scoville}
-                onChange={(e) => set('scoville', e.target.value)}
+                onChange={onScovilleChange}
                 placeholder="5 000"
               />
             </Field>

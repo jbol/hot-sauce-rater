@@ -1,12 +1,16 @@
 // The passport's fire scale: 1–10, grouped into five named levels that map
-// onto the fan gauge and the coloured category chips.
+// onto the fan gauge and the coloured category chips. When a sauce has a
+// Scoville rating the level is DERIVED from it (see shared/scoville.js);
+// otherwise the taster picks the fan by feel.
+
+export { SCOVILLE_BANDS, heatFromScoville } from '../../shared/scoville.js';
 
 export const HEAT_LEVELS = [
-  { max: 2,  key: 'suave',    es: 'SUAVE',    en: 'Mild' },
-  { max: 4,  key: 'templado', es: 'TEMPLADO', en: 'Warm' },
-  { max: 6,  key: 'picante',  es: 'PICANTE',  en: 'Hot' },
-  { max: 8,  key: 'ardiente', es: 'ARDIENTE', en: 'Fiery' },
-  { max: 10, key: 'infierno', es: 'INFIERNO', en: 'Inferno' },
+  { max: 2,  key: 'suave',    es: 'SUAVE',    en: 'Mild',    shu: '0 – 1.6k SHU' },
+  { max: 4,  key: 'templado', es: 'TEMPLADO', en: 'Warm',    shu: '1.6k – 5k SHU' },
+  { max: 6,  key: 'picante',  es: 'PICANTE',  en: 'Hot',     shu: '5k – 15k SHU' },
+  { max: 8,  key: 'ardiente', es: 'ARDIENTE', en: 'Fiery',   shu: '15k – 150k SHU' },
+  { max: 10, key: 'infierno', es: 'INFIERNO', en: 'Inferno', shu: '150k+ SHU' },
 ];
 
 export const heatCategory = (heat) =>

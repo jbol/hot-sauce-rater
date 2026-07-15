@@ -57,7 +57,7 @@ test('catalogue ratings become entries with mapped fields', () => {
   const e = entries[0];
   assert.equal(e.name, 'Sriracha');
   assert.equal(e.brand, 'Huy Fong');
-  assert.equal(e.heat, 6, 'v2 heatLevel 3 maps to 6 on the 1–10 scale');
+  assert.equal(e.heat, 3, 'level derived from its 1,750 SHU catalogue Scoville');
   assert.equal(e.rating, 4, 'star rating carried over');
   assert.equal(e.scoville, 1750);
   assert.equal(e.tried_on, '2026-05-01', 'tried_on taken from rated_at');

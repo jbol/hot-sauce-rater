@@ -222,6 +222,7 @@ export function IntroPage() {
       </p>
       <p className="intro-text-en">
         Every sauce you try earns a stamped page, ordered from mildest to most infernal.
+        With a Scoville rating, the level is set by science; without one, by bravery.
       </p>
 
       <Divider />
@@ -234,6 +235,7 @@ export function IntroPage() {
               <span className="intro-legend-es">{l.es}</span>
               <span className="intro-legend-en">{l.en}</span>
             </div>
+            <span className="intro-legend-shu">{l.shu}</span>
             <span className={`heat-chip heat-${l.key}`}>{l.max - 1}–{l.max}</span>
           </div>
         ))}

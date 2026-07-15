@@ -940,7 +940,17 @@ input, textarea, select { font: inherit; color: inherit; }
 }
 .intro-legend-en { font-style: italic; font-size: 12.5px; color: var(--tinta-suave); }
 
-.intro-legend-row .heat-chip { margin-left: auto; }
+.intro-legend-shu {
+  margin-left: auto;
+  font-family: 'Courier New', monospace;
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.3px;
+  color: #9a7b45;
+  white-space: nowrap;
+}
+
+.intro-legend-row .heat-chip { margin-left: 10px; }
 
 .intro-fineprint {
   margin-top: auto;
@@ -1475,6 +1485,25 @@ input, textarea, select { font: inherit; color: inherit; }
   background: linear-gradient(180deg, #d98b3a, #b3452c);
   border-color: #8e1f2c;
   color: #fff3dd;
+}
+
+.fire-tick:disabled { opacity: 0.55; cursor: default; }
+
+.fire-locked-note {
+  margin-top: 8px;
+  text-align: center;
+  font-family: var(--titulo);
+  font-weight: 700;
+  font-size: 8.5px;
+  letter-spacing: 1.6px;
+  color: var(--etiqueta);
+}
+.fire-locked-note i {
+  font-family: var(--cuerpo);
+  font-style: italic;
+  font-size: 11px;
+  letter-spacing: 0.3px;
+  color: #b09a72;
 }
 
 .modal-footer {

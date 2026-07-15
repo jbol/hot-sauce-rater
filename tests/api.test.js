@@ -85,11 +85,11 @@ test('create applies defaults and validates bounds', async () => {
 
 test('entries come back least → most spicy (heat, then scoville, then name)', async () => {
   const sauces = [
-    { name: 'Cola', heat: 7, scoville: 5000 },
+    { name: 'Cola', scoville: 5000 },   // derives heat 4
     { name: 'Beta', heat: 2 },
     { name: 'Alfa', heat: 2 },
-    { name: 'Nulo', heat: 7 },              // no scoville → sorts before known scoville at same heat
-    { name: 'Bajo', heat: 7, scoville: 100 },
+    { name: 'Nulo', heat: 7 },
+    { name: 'Bajo', scoville: 100 },    // derives heat 1
   ];
   for (const s of sauces) {
     assert.equal((await alice.post('/api/entries', s)).status, 201);
@@ -99,7 +99,7 @@ test('entries come back least → most spicy (heat, then scoville, then name)', 
   assert.equal(list.status, 200);
   assert.deepEqual(
     list.json.entries.map((e) => e.name),
-    ['Alfa', 'Beta', 'Media', 'Nulo', 'Bajo', 'Cola'],
+    ['Bajo', 'Alfa', 'Beta', 'Cola', 'Media', 'Nulo'],
   );
 });
 
@@ -127,6 +127,32 @@ test('delete tears the page out', async () => {
 
   const after = await alice.get('/api/entries');
   assert.ok(!after.json.entries.some((e) => e.id === media.id));
+});
+
+test('a known Scoville anchors the level — submitted heat cannot contradict it', async () => {
+  const derived = await alice.post('/api/entries', { name: 'Científica', scoville: 135600 });
+  assert.equal(derived.status, 201);
+  assert.equal(derived.json.entry.heat, 8, 'level computed from Scoville alone');
+
+  const stubborn = await alice.post('/api/entries', { name: 'Terca', heat: 1, scoville: 500000 });
+  assert.equal(stubborn.json.entry.heat, 9, 'Scoville wins over a contradicting heat');
+
+  assert.equal(
+    (await alice.post('/api/entries', { name: 'SinNada' })).status,
+    400,
+    'need either a Scoville or a hand-picked heat',
+  );
+
+  // editing the Scoville re-derives the level on the way through
+  const updated = await alice.put(`/api/entries/${stubborn.json.entry.id}`, {
+    ...stubborn.json.entry,
+    scoville: 200,
+  });
+  assert.equal(updated.json.entry.heat, 1);
+
+  // tidy up so later tests keep their expectations
+  await alice.del(`/api/entries/${derived.json.entry.id}`);
+  await alice.del(`/api/entries/${stubborn.json.entry.id}`);
 });
 
 test("users cannot see or touch each other's entries", async () => {

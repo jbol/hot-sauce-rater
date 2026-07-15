@@ -3,6 +3,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { LEGACY_CATALOGUE } from './legacy-catalogue.js';
+import { heatFromScoville } from '../shared/scoville.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -114,13 +115,32 @@ if (!db.prepare('SELECT value FROM meta WHERE key = ?').get(MIGRATION_KEY)) {
     if (!sauce) continue;
     const result = insert.run(
       row.user_id, sauce.name, sauce.brand, sauce.origin, sauce.peppers,
-      sauce.heat, row.rating, sauce.scoville, row.rated_at, row.sauce_id
+      heatFromScoville(sauce.scoville), row.rating, sauce.scoville, row.rated_at, row.sauce_id
     );
     migrated += Number(result.changes);
   }
 
   db.prepare('INSERT INTO meta (key, value) VALUES (?, ?)').run(MIGRATION_KEY, new Date().toISOString());
   if (migrated > 0) console.log(`♻️  Migrated ${migrated} legacy rating(s) into passport entries`);
+}
+
+// ── One-time migration: anchor existing levels to Scoville ──────────────────
+// From v3.5 the level is derived from Scoville whenever one is recorded; this
+// re-derives rows created before that rule so old and new entries agree.
+const SCOVILLE_MIGRATION_KEY = 'heat_derived_from_scoville_v1';
+if (!db.prepare('SELECT value FROM meta WHERE key = ?').get(SCOVILLE_MIGRATION_KEY)) {
+  const rows = db.prepare('SELECT id, heat, scoville FROM entries WHERE scoville IS NOT NULL').all();
+  const update = db.prepare('UPDATE entries SET heat = ? WHERE id = ?');
+  let rederived = 0;
+  for (const row of rows) {
+    const derived = heatFromScoville(row.scoville);
+    if (derived !== row.heat) {
+      update.run(derived, row.id);
+      rederived++;
+    }
+  }
+  db.prepare('INSERT INTO meta (key, value) VALUES (?, ?)').run(SCOVILLE_MIGRATION_KEY, new Date().toISOString());
+  if (rederived > 0) console.log(`♻️  Re-derived ${rederived} entry level(s) from Scoville`);
 }
 
 console.log('✅ Database ready');

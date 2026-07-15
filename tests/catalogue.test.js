@@ -3,22 +3,25 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { CATALOGUE, searchCatalogue } from '../src/data/catalogue.js';
+import { heatFromScoville } from '../shared/scoville.js';
 
-test('catalogue has at least 50 well-formed sauces', () => {
+test('catalogue has at least 50 well-formed sauces (levels derive from Scoville)', () => {
   assert.ok(CATALOGUE.length >= 50, `has ${CATALOGUE.length} sauces`);
 
   const names = new Set();
   for (const s of CATALOGUE) {
     assert.ok(s.name && s.brand && s.origin && s.peppers, `${s.name || '?'}: all text fields present`);
-    assert.ok(Number.isInteger(s.heat) && s.heat >= 1 && s.heat <= 10, `${s.name}: heat on the 1–10 scale`);
     assert.ok(Number.isInteger(s.scoville) && s.scoville > 0, `${s.name}: positive integer scoville`);
+    assert.equal(s.heat, undefined, `${s.name}: no hand-assigned heat — it derives`);
+    const derived = heatFromScoville(s.scoville);
+    assert.ok(derived >= 1 && derived <= 10, `${s.name}: derives onto the scale`);
     assert.ok(!names.has(s.name), `${s.name}: name is unique`);
     names.add(s.name);
   }
 });
 
 test('catalogue spans the whole fire scale', () => {
-  const heats = new Set(CATALOGUE.map((s) => s.heat));
+  const heats = new Set(CATALOGUE.map((s) => heatFromScoville(s.scoville)));
   assert.ok(heats.has(1), 'has suave sauces');
   assert.ok(heats.has(10), 'has inferno sauces');
 });

@@ -24,10 +24,11 @@ React + Vite frontend · zero-dependency Node 22 backend · `node:sqlite` · pnp
 ```mermaid
 graph TD
   subgraph server [server/ — pure Node, no deps]
-    IDX[index.js<br/>http server · ROUTES table · handlers · rate limit · static] --> DB[db.js<br/>schema + one-time migration]
+    IDX[index.js<br/>http server · ROUTES table · handlers · rate limit · static] --> DB[db.js<br/>schema + one-time migrations]
     IDX --> AUTH[auth.js<br/>scrypt · HMAC tokens · cookies]
     DB --> LEG[legacy-catalogue.js<br/>v2 data, migration only]
   end
+  IDX & DB & HU --> SH[shared/scoville.js<br/>SHU→1–10 bands · heatFromScoville]
   subgraph frontend [src/]
     MAIN[main.jsx] --> APP[App.jsx<br/>Nav · splash · gate]
     APP --> AC[contexts/AuthContext]
@@ -65,6 +66,10 @@ graph TD
 - Server JSON is camelCase (`triedOn`); DB is snake_case — mapped in `entryToJson`.
 - Validation bounds (`parseEntryBody`): name ≤120 (required), brand/origin/peppers ≤120,
   notes ≤2000, scoville 0–16,000,000, triedOn ISO date (defaults today). PUT = full object.
+- **Levels are Scoville-anchored (v3.5):** when `scoville` is present, `heat` is
+  DERIVED via `shared/scoville.js` bands (submitted heat ignored); without it,
+  heat 1–10 is required. One-time re-derive of old rows keyed
+  `meta['heat_derived_from_scoville_v1']`. Catalogue carries no heat field.
 - **Legacy migration runs once ever** per DB, keyed `meta['legacy_ratings_migrated']`
   (db.js). Old `ratings` × legacy-catalogue → entries. Never re-runs, so user
   edits/deletes stick. `ratings`/`favorites` tables kept read-only. Don't drop `meta`.
@@ -86,6 +91,7 @@ graph TD
 - After save, `pendingId` effect navigates to the entry's (possibly re-filed) page.
 - Heat categories (utils/heat.js): SUAVE ≤2 · TEMPLADO ≤4 · PICANTE ≤6 ·
   ARDIENTE ≤8 · INFIERNO ≤10; fan blade ramp gold→carmine (`heatColor`).
+  SHU spans per category: 0–1.6k · –5k · –15k · –150k · 150k+.
 
 ## Deploy (Hostinger — see DEPLOYING.md for full flow)
 

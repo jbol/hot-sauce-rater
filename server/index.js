@@ -15,6 +15,7 @@ import { join, extname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { db } from './db.js';
 import { hashPassword, verifyPassword, signToken, verifyToken } from './auth.js';
+import { heatFromScoville } from '../shared/scoville.js';
 
 const __dirname = join(fileURLToPath(import.meta.url), '..');
 const DIST_DIR = resolve(__dirname, '..', 'dist');
@@ -285,17 +286,19 @@ function parseEntryBody(body) {
   const name = trimmed(body.name, 120);
   if (!name) return { error: 'Sauce name is required' };
 
-  const heat = body.heat;
-  if (!Number.isInteger(heat) || heat < 1 || heat > 10)
-    return { error: 'Heat must be an integer between 1 and 10' };
+  const scoville = body.scoville ?? null;
+  if (scoville !== null && (!Number.isInteger(scoville) || scoville < 0 || scoville > 16_000_000))
+    return { error: 'Scoville must be a number between 0 and 16,000,000' };
+
+  // The level is anchored to Scoville whenever it's known — a submitted heat
+  // can never contradict it. Hand-picked heat is the no-Scoville fallback.
+  const heat = scoville !== null ? heatFromScoville(scoville) : body.heat;
+  if (scoville === null && (!Number.isInteger(heat) || heat < 1 || heat > 10))
+    return { error: 'Provide a Scoville rating, or a heat between 1 and 10' };
 
   const rating = body.rating ?? null;
   if (rating !== null && (!Number.isInteger(rating) || rating < 1 || rating > 5))
     return { error: 'Rating must be between 1 and 5' };
-
-  const scoville = body.scoville ?? null;
-  if (scoville !== null && (!Number.isInteger(scoville) || scoville < 0 || scoville > 16_000_000))
-    return { error: 'Scoville must be a number between 0 and 16,000,000' };
 
   const triedOn = body.triedOn ?? null;
   if (triedOn !== null && !isIsoDate(triedOn))
