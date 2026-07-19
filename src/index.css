@@ -928,6 +928,9 @@ input, textarea, select { font: inherit; color: inherit; }
   padding: 1px 6px;
   border-bottom: 1px dotted #e0cfa6;
 }
+
+/* the fans must never flex-shrink — squeezed rows made them uneven */
+.intro-legend-row .fan-gauge { flex-shrink: 0; }
 .intro-legend-row:last-child { border-bottom: none; }
 
 .intro-legend-names { display: flex; flex-direction: column; }
@@ -1771,6 +1774,14 @@ input, textarea, select { font: inherit; color: inherit; }
   .form-grid { grid-template-columns: 1fr; }
   .form-grid-3 { grid-template-columns: 1fr 1fr; }
   .fire-picker { gap: 12px; }
+
+  /* fire-scale legend: uniform smaller fans, tighter rows */
+  .intro-legend-row { gap: 9px; padding: 1px 2px; }
+  .intro-legend-row .fan-gauge { width: 42px; height: 31px; }
+  .intro-legend-es { font-size: 10.5px; letter-spacing: 1.4px; }
+  .intro-legend-en { font-size: 11px; }
+  .intro-legend-shu { font-size: 8.5px; }
+  .intro-legend-row .heat-chip { margin-left: 6px; padding: 2px 7px 1px; font-size: 8px; }
 
   /* denser ID page — the data page must fit a 378px-wide passport */
   .id-page { --pad-x: 18px; --pad-y: 12px; }
